@@ -1,5 +1,5 @@
 {
-  "name": "cyber-account",
+  "name": "@cyberlab/cyber-account",
   "version": "0.0.0-development",
   "description": "",
   "main": "index.js",
