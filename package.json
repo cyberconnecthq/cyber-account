@@ -1,0 +1,49 @@
+{
+  "name": "cyber-account",
+  "version": "0.0.0-development",
+  "description": "",
+  "main": "index.js",
+  "types": "./lib/cjs/types/index.d.ts",
+  "files": [
+    "lib/**/*"
+  ],
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./lib/esm/types/index.d.ts",
+        "default": "./lib/esm/index.mjs"
+      },
+      "require": {
+        "types": "./lib/cjs/types/index.d.ts",
+        "default": "./lib/cjs/index.js"
+      }
+    }
+  },
+  "scripts": {
+    "clean": "rm -rf ./lib",
+    "build": "pnpm run clean && pnpm run build:esm && pnpm run build:cjs",
+    "build:esm": "tsc -p ./tsconfig.esm.json && mv lib/esm/index.js lib/esm/index.mjs",
+    "build:cjs": "tsc -p ./tsconfig.cjs.json",
+    "prepack": "pnpm run build",
+    "semantic-release": "semantic-release"
+  },
+  "keywords": [],
+  "author": "CyberConnect",
+  "license": "MIT",
+  "dependencies": {
+    "semantic-release": "^21.0.9",
+    "viem": "^1.6.7"
+  },
+  "devDependencies": {
+    "prettier": "^3.0.2",
+    "semantic-release": "^21.0.9",
+    "typescript": "^5.1.6"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cyberconnecthq/cyber-account.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
