@@ -1,6 +1,9 @@
 lockfileVersion: '6.0'
 
 dependencies:
+  typescript:
+    specifier: ^5.1.6
+    version: 5.1.6
   viem:
     specifier: ^1.6.7
     version: 1.6.7(typescript@5.1.6)
@@ -33,9 +36,6 @@ devDependencies:
   ts-node:
     specifier: ^10.9.1
     version: 10.9.1(@types/node@20.5.1)(typescript@5.1.6)
-  typescript:
-    specifier: ^5.1.6
-    version: 5.1.6
 
 packages:
 
