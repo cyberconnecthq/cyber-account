@@ -1,7 +1,5 @@
 import { type Address, type Hex } from "viem";
 
-export type Mode = "production" | "development";
-
 export type UserOperation = {
   sender: Address;
   nonce: number;

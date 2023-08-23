@@ -1,4 +1,5 @@
 import CyberFactory from "../CyberFactory";
+import { optimism, optimismGoerli } from "viem/chains";
 
 describe("CyberFactory", () => {
   it("returns the correct CyberAccount address on the testnet", () => {
@@ -7,7 +8,7 @@ describe("CyberFactory", () => {
 
     const cyberFactory = new CyberFactory({
       ownerAddress,
-      mode: "development",
+      chain: optimismGoerli,
     });
 
     const computedAddress = cyberFactory.getContractAccountAddress();
@@ -21,7 +22,7 @@ describe("CyberFactory", () => {
 
     const cyberFactory = new CyberFactory({
       ownerAddress,
-      mode: "production",
+      chain: optimism,
     });
 
     const computedAddress = cyberFactory.getContractAccountAddress();

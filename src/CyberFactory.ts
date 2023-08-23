@@ -1,6 +1,7 @@
 import {
   type Address,
   type Hex,
+  type Chain,
   keccak256,
   concat,
   bytesToHex,
@@ -8,12 +9,13 @@ import {
   getContractAddress,
   encodeAbiParameters,
   parseAbiParameters,
+  encodeFunctionData,
 } from "viem";
-import { Mode } from "./types";
+import { KernelFactoryAbi } from "./ABIs";
 
 class CyberFactory {
   ownerAddress: Address;
-  mode: Mode;
+  chain: Chain;
   contractAddresses: Record<string, Address>;
 
   static testnetContractAddresses: Record<string, Address> = {
@@ -30,17 +32,22 @@ class CyberFactory {
     nextTemplate: "0x7939a966331af83551C2b1F8753Cd1aa76C85F5c",
   };
 
-  constructor({ ownerAddress, mode }: { ownerAddress: Address; mode: Mode }) {
-    if (!mode) {
-      throw new Error("Mode must be specified: production or development.");
+  constructor({
+    ownerAddress,
+    chain,
+  }: {
+    ownerAddress: Address;
+    chain: Chain;
+  }) {
+    if (!chain) {
+      throw new Error("Chain must be specified.");
     }
 
     this.ownerAddress = ownerAddress;
-    this.mode = mode;
-    this.contractAddresses =
-      mode === "production"
-        ? CyberFactory.mainnetContractAddresses
-        : CyberFactory.testnetContractAddresses;
+    this.chain = chain;
+    this.contractAddresses = chain.testnet
+      ? CyberFactory.testnetContractAddresses
+      : CyberFactory.mainnetContractAddresses;
   }
 
   getSalt = (): Hex => {
@@ -91,6 +98,14 @@ class CyberFactory {
     const bytecode = this.getByteCode();
 
     return getContractAddress({ from, salt, opcode, bytecode });
+  }
+
+  getFactoryInitCode() {
+    return encodeFunctionData({
+      abi: KernelFactoryAbi,
+      functionName: "createAccount",
+      args: [this.contractAddresses.validator, this.ownerAddress, BigInt(0)],
+    });
   }
 }
 
