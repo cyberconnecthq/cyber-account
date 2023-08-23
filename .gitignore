@@ -131,4 +131,4 @@ dist
 
 # generated files
 lib
-
+.DS_Store
