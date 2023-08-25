@@ -32,7 +32,7 @@
   "author": "CyberConnect",
   "license": "MIT",
   "dependencies": {
-    "viem": "^1.6.7"
+    "viem": "^1.7.0"
   },
   "devDependencies": {
     "@babel/core": "^7.22.10",
