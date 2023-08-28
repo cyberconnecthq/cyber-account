@@ -2,7 +2,7 @@
 
 CyberAccount SDK is the official NPM package that implements CyberConnect V3 account abstraction.
 
-## Supported Chain
+## Supported Chains
 
 - Optimism / Optimism Goerli
 - Polygon / Polygon Mumbai
