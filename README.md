@@ -114,8 +114,8 @@ const sign = async (userOperationHash) => {
 
 ### Methods
 
-- `isAccountDeployed: () => boolean;` - Checks if the CyberAccount is deployed.
-- `getAccountInitCode: () => Hex;` - Returns the init code of the CyberAccount.
+- `isAccountDeployed: async () => boolean;` - Checks if the CyberAccount is deployed.
+- `getAccountInitCode: async () => Hex;` - Returns the init code of the CyberAccount.
 - `getCallData: (userOperationCallData: UserOperationCallData);` - Get the encoded executable call data.
 - `getSignature: (rawSig: Hash) => Hash;` - Get the wrapped signature for validation.
 - `sendTransaction: async (transcationData: TransactionData) => Promise<Hash | null>` - Send a transaction using the CyberAccount.
