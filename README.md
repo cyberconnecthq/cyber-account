@@ -56,7 +56,7 @@ cyberAccount.sendTransaction({
 
 ### Parameters
 
-- chain: The target chain that CyberAccount is deployed on.
+- chain: The target chain of the CyberAccount is deployed on.
   ```typescript
   type Chain = {
     id: number;
@@ -64,14 +64,14 @@ cyberAccount.sendTransaction({
     rpcUrl?: string;
   };
   ```
-- owner: The owner of a CyberAccount (Check ‘Signing the user operation hash section’ for the details).
+- owner: The owner of a CyberAccount (Check [Signing the user operation hash section](#signing-the-user-operation-hash) for the details).
   ```typescript
   type Owner = {
   	address: Address;
   	signMessage: async (message: string) => Promise<Hash>;
   }
   ```
-- bundler (CyberBundler): An instance of `CyberBundler` for handling the CyberAccount user operations.
+- bundler (CyberBundler): An instance of [`CyberBundler`](#cyberbundler) for handling the CyberAccount user operations.
 
 ### Signing the user operation hash
 
@@ -118,11 +118,11 @@ const sign = async (userOperationHash) => {
 - `getAccountInitCode: () => Hex;` - Returns the init code of the CyberAccount.
 - `getCallData: (userOperationCallData: UserOperationCallData);` - Get the encoded executable call data.
 - `getSignature: (rawSig: Hash) => Hash;` - Get the wrapped signature for validation.
-- `sendTransaction: async (T) => Promise<Hash | null>` - Send a transaction using the CyberAccount.
+- `sendTransaction: async (transcationData: TransactionData) => Promise<Hash | null>` - Send a transaction using the CyberAccount.
 
 ## CyberBundler
 
-CyberBundler is a standard ERC-4337 class.
+CyberBundler is a standard ERC-4337 bundler class.
 
 ```typescript
 const cyberBundler = new CyberBundler({
