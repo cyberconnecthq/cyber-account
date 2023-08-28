@@ -42,7 +42,7 @@ describe("CyberAccount", () => {
       bundler: cyberBundler,
     });
 
-    expect(cyberAccount.getUserOperationHash(userOperation)).toEqual(
+    expect(cyberAccount.hashUserOperation(userOperation)).toEqual(
       userOperationHash
     );
   });

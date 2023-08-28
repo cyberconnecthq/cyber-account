@@ -2,8 +2,8 @@ lockfileVersion: '6.0'
 
 dependencies:
   viem:
-    specifier: ^1.7.0
-    version: 1.7.0(typescript@5.1.6)
+    specifier: ^1.8.1
+    version: 1.8.1(typescript@5.1.6)
 
 devDependencies:
   '@babel/core':
@@ -5049,8 +5049,8 @@ packages:
       spdx-expression-parse: 3.0.1
     dev: true
 
-  /viem@1.7.0(typescript@5.1.6):
-    resolution: {integrity: sha512-S4SclYe0Oca6TuPh2YPI3BzfC7a4UvN7TRDCWwpoVNnu9+4z2hqCZhW+6aF1yufgSwdezNsF14vztE/P4eMdBw==}
+  /viem@1.8.1(typescript@5.1.6):
+    resolution: {integrity: sha512-g+8dW8K6uae+3k/5pezSmlwo3/G+uEZiQsHlJooH86Z4PT3clgtU179iL/GNEcNGwafyJh/Iq/1e+FTbHQKH8Q==}
     peerDependencies:
       typescript: '>=5.0.4'
     peerDependenciesMeta:

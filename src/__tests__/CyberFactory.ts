@@ -11,7 +11,7 @@ describe("CyberFactory", () => {
       chain: optimismGoerli,
     });
 
-    const computedAddress = cyberFactory.getContractAccountAddress();
+    const computedAddress = cyberFactory.calculateContractAccountAddress();
 
     expect(computedAddress).toBe(cyberAccount);
   });
@@ -25,7 +25,7 @@ describe("CyberFactory", () => {
       chain: optimism,
     });
 
-    const computedAddress = cyberFactory.getContractAccountAddress();
+    const computedAddress = cyberFactory.calculateContractAccountAddress();
 
     expect(computedAddress).toBe(cyberAccount);
   });

@@ -9,97 +9,79 @@ import {
   encodeAbiParameters,
   parseAbiParameters,
   keccak256,
-  createWalletClient,
-  custom,
   toHex,
   hexToBigInt,
 } from "viem";
-import { mainnet } from "viem/chains";
 import CyberFactory from "./CyberFactory";
 import CyberBundler from "./CyberBundler";
-import { publicClients } from "./rpcClient";
+import { publicClients } from "./rpcClients";
 import {
   type UserOperation,
   type UserOperationCallData,
   type CyberAccountOwner,
-  type SmartAccount,
 } from "./types";
 import { EntryPointAbi, KernelAccountAbi } from "./ABIs";
 
 interface CyberAccountParams {
   owner: CyberAccountOwner;
-  chain: Chain;
+  chain: Partial<Chain> & { id: Chain["id"]; rpcUrl?: string };
   bundler: CyberBundler;
 }
 
-type Options = {};
-
-const ENTRY_POINT_ADDRESS = "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789";
-
 class CyberAccount {
-  bundler: CyberBundler;
-  owner: CyberAccountOwner;
-  chain: Chain;
-  cyberFactory: CyberFactory;
-  rpcClient: PublicClient;
-  smartAccount: SmartAccount;
-  // It may support multiple validation modes in the future.
-  // https://docs.zerodev.app/extend-wallets/overview#validation-phase
+  public bundler: CyberBundler;
+  public owner: CyberAccountOwner;
+  public chain: Partial<Chain> & { id: Chain["id"]; rpcUrl?: string };
+  public factory: CyberFactory;
+  private publicClient: PublicClient;
+  public address: Address;
+  public isDeployed?: boolean;
+  private initCode?: Hex;
 
-  static validationModes: Record<string, Hex> = {
-    sudo: "0x00000000",
-  };
-
-  constructor(params: CyberAccountParams, options?: Options) {
+  constructor(params: CyberAccountParams) {
     const { chain, owner, bundler } = params;
     this.chain = chain;
     this.owner = owner;
-    this.cyberFactory = new CyberFactory({
+    this.factory = new CyberFactory({
       ownerAddress: this.owner.address,
       chain,
     });
-    this.smartAccount = {
-      address: this.cyberFactory.getContractAccountAddress(),
-    };
-    this.rpcClient = this.getRpcClient(chain.id);
+    this.address = this.factory.calculateContractAccountAddress();
+    this.publicClient = this.getRpcClient(chain);
     this.bundler = bundler.connect(chain.id);
   }
 
-  getRpcClient(chainId: number): PublicClient {
-    const rpcClient = publicClients[chainId];
+  private getRpcClient(
+    chain: Partial<Chain> & { id: Chain["id"]; rpcUrl?: string }
+  ): PublicClient {
+    const publicClient = publicClients[chain.id];
 
-    if (!rpcClient) {
-      throw new Error(`No RPC client found for chain ${chainId}`);
+    if (!publicClient) {
+      throw new Error(`No RPC client found for chain ${chain.id}`);
     }
 
-    return rpcClient;
+    return publicClient(chain.rpcUrl);
   }
 
-  async isAccountDeployed(chainId?: number) {
-    if (this.smartAccount.isDeployed !== undefined) {
-      return this.smartAccount.isDeployed;
+  public async isAccountDeployed() {
+    if (this.isDeployed !== undefined) {
+      return this.isDeployed;
     }
 
-    let rpcClient = this.rpcClient;
-
-    if (chainId) {
-      rpcClient = this.getRpcClient(chainId);
-    }
-
-    const byteCode = await rpcClient.getBytecode({
-      address: this.smartAccount.address,
+    const byteCode = await this.publicClient.getBytecode({
+      address: this.address,
     });
 
     const isDeployed = !!byteCode && byteCode !== "0x";
 
-    this.smartAccount.isDeployed = isDeployed;
+    this.isDeployed = isDeployed;
 
     return isDeployed;
   }
 
-  async getAccountInitCode() {
-    if (this.smartAccount.initCode !== undefined) {
-      return this.smartAccount.initCode;
+  public async getAccountInitCode() {
+    if (this.initCode !== undefined) {
+      return this.initCode;
     }
 
     const isDeployed = await this.isAccountDeployed();
@@ -109,20 +91,16 @@ class CyberAccount {
     }
 
     const initCode = concat([
-      this.cyberFactory.contractAddresses.factory,
-      this.cyberFactory.getFactoryInitCode(),
+      this.factory.contractAddresses.factory,
+      this.factory.getFactoryInitCode(),
     ]);
 
-    this.smartAccount.initCode = initCode;
+    this.initCode = initCode;
 
     return initCode;
   }
 
-  encodeSignature(signature: Hex) {
-    return concat([CyberAccount.validationModes.sudo, signature]);
-  }
-
-  encodeExecuteCallData(callData: UserOperationCallData) {
+  private encodeExecuteCallData(callData: UserOperationCallData) {
     const { to, value, data } = callData;
 
     if (!to || !data) {
@@ -137,10 +115,13 @@ class CyberAccount {
     });
   }
 
-  async sendTransaction(
-    transactionData: UserOperationCallData
+  public async sendTransaction(
+    transactionData: UserOperationCallData & {
+      maxFeePerGas: bigint;
+      maxPriorityFeePerGas: bigint;
+    }
   ): Promise<Hash | undefined> {
-    const sender = this.smartAccount.address;
+    const sender = this.address;
 
     const values = await Promise.all([
       this.getUserOperationNonce(),
@@ -159,8 +140,9 @@ class CyberAccount {
     const signature =
       "0x00000000870fe151d548a1c527c3804866fab30abf28ed17b79d5fc5149f19ca0819fefc3c57f3da4fdf9b10fab3f2f3dca536467ae44943b9dbb8433efe7760ddd72aaa1c";
 
-    const { maxFeePerGas = 0n, maxPriorityFeePerGas = 0n } =
-      await this.rpcClient.estimateFeesPerGas();
+    const { maxFeePerGas, maxPriorityFeePerGas } = await this.calculateGasFees(
+      transactionData
+    );
 
     let draftedUserOperation: UserOperation = {
       sender,
@@ -170,21 +152,20 @@ class CyberAccount {
       callGasLimit,
       verificationGasLimit,
       preVerificationGas,
-      maxFeePerGas: toHex(maxFeePerGas * 200n),
-      maxPriorityFeePerGas: toHex(maxPriorityFeePerGas * 200n),
+      maxFeePerGas,
+      maxPriorityFeePerGas,
       paymasterAndData,
       signature,
     };
 
     const estimatedGasValues = await this.bundler.estimateUserOperationGas(
       draftedUserOperation,
-      ENTRY_POINT_ADDRESS
+      CyberBundler.entryPointAddress
     );
 
-    //@ts-ignore
     draftedUserOperation = { ...draftedUserOperation, ...estimatedGasValues };
 
-    const userOperationHash = this.getUserOperationHash({
+    const userOperationHash = this.hashUserOperation({
       ...draftedUserOperation,
       paymasterAndData: "0x",
     });
@@ -200,22 +181,57 @@ class CyberAccount {
 
     return await this.bundler.sendUserOperation(
       signedUserOperation,
-      ENTRY_POINT_ADDRESS
+      CyberBundler.entryPointAddress
     );
   }
 
-  async getUserOperationNonce() {
-    const nonce = await this.rpcClient.readContract({
-      address: ENTRY_POINT_ADDRESS,
+  private async calculateGasFees(customizedFees?: {
+    maxFeePerGas: bigint;
+    maxPriorityFeePerGas: bigint;
+  }) {
+    const { maxFeePerGas, maxPriorityFeePerGas } = customizedFees || {};
+
+    if (maxFeePerGas !== undefined && maxPriorityFeePerGas !== undefined) {
+      return {
+        maxFeePerGas: toHex(maxFeePerGas),
+        maxPriorityFeePerGas: toHex(maxPriorityFeePerGas),
+      };
+    }
+
+    const maxPriorityFeePerGasOnChain = hexToBigInt(
+      await this.publicClient.request({
+        method: "eth_maxPriorityFeePerGas",
+      })
+    );
+
+    const maxPriorityFeePerGasWithBuffer =
+      (maxPriorityFeePerGasOnChain * 125n) / 100n;
+
+    const { baseFeePerGas } = await this.publicClient.getBlock();
+
+    const baseFeePerGasWithBuffer = (baseFeePerGas || 0n) * 2n;
+
+    const maxFeePerGasWithBuffer =
+      baseFeePerGasWithBuffer + maxPriorityFeePerGasWithBuffer;
+
+    return {
+      maxFeePerGas: toHex(maxFeePerGasWithBuffer),
+      maxPriorityFeePerGas: toHex(maxPriorityFeePerGasWithBuffer),
+    };
+  }
+
+  private async getUserOperationNonce() {
+    const nonce = await this.publicClient.readContract({
+      address: CyberBundler.entryPointAddress,
       abi: EntryPointAbi,
       functionName: "getNonce",
-      args: [this.smartAccount.address, BigInt(0)],
+      args: [this.address, BigInt(0)],
     });
 
     return nonce;
   }
 
-  getUserOperationHash(userOperation: UserOperation) {
+  public hashUserOperation(userOperation: UserOperation) {
     const {
       sender,
       nonce,
@@ -249,14 +265,22 @@ class CyberAccount {
 
     const encoded = encodeAbiParameters(
       parseAbiParameters("bytes32, address, uint256"),
-      [keccak256(packed), ENTRY_POINT_ADDRESS, BigInt(this.chain.id)]
+      [keccak256(packed), CyberBundler.entryPointAddress, BigInt(this.chain.id)]
     );
 
     return keccak256(encoded);
   }
 
-  addValidatorToSignature(signature: Hex) {
-    return concat([CyberAccount.validationModes.sudo, signature]);
+  public getCallData(callData: UserOperationCallData) {
+    return this.encodeExecuteCallData(callData);
+  }
+
+  public getSignature(rawSignature: Hex) {
+    return this.addValidatorToSignature(rawSignature);
+  }
+
+  private addValidatorToSignature(signature: Hex) {
+    return concat([CyberFactory.validationModes.sudo, signature]);
   }
 }
 

@@ -61,6 +61,11 @@ export type BundlerRpcRequest = [
     Method: "eth_getUserOperationReceipt";
     Parameters: [Hash];
     ReturnType: UserOperationReceipt;
+  },
+  {
+    Method: "eth_supportedEntryPoints";
+    Parameters: [];
+    ReturnType: Address[];
   }
 ];
 
@@ -78,17 +83,24 @@ export type UserOperationReceipt = {
   receipt: TransactionReceipt;
 };
 
+export type Estimation = {
+  preVerificationGas: Hex;
+  verificationGasLimit: Hex;
+  callGasLimit: Hex;
+};
+
 export type BundlerActions = {
   estimateUserOperationGas: (
     userOperation: UserOperation,
     entryPoint: Address
-  ) => Promise<Hash>;
+  ) => Promise<Estimation>;
   sendUserOperation: (
     userOperation: UserOperation,
     entryPoint: Address
   ) => Promise<Hash>;
   getUserOperationByHash: (hash: Hash) => Promise<OnChainUserOperation | null>;
   getUserOperationReceipt: (hash: Hash) => Promise<UserOperationReceipt | null>;
+  getSupportedEntryPoints: () => Promise<Address[]>;
 };
 
 export type BundlerClient = Client<
@@ -104,10 +116,4 @@ export type OnChainUserOperation = UserOperation & {
   blockNumber: Hex;
   entryPoint: Address;
   transactionHash: Hash;
-};
-
-export type SmartAccount = {
-  address: Address;
-  initCode?: Hex;
-  isDeployed?: boolean;
 };

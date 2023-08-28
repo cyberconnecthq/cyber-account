@@ -3,16 +3,19 @@ import { mainnet } from "viem/chains";
 import type { BundlerClient, UserOperation } from "./types";
 
 class CyberBundler {
-  client?: BundlerClient;
-  rpcUrl: string;
-  appId: string;
+  private client?: BundlerClient;
+  public rpcUrl: string;
+  public appId: string;
+
+  static entryPointAddress: Address =
+    "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789";
 
   constructor({ rpcUrl, appId }: { rpcUrl: string; appId: string }) {
     this.rpcUrl = rpcUrl;
     this.appId = appId;
   }
 
-  connect(chainId: number) {
+  public connect(chainId: number) {
     const client: BundlerClient = createClient({
       chain: mainnet,
       transport: http(`${this.rpcUrl}?chainId=${chainId}&appId=${this.appId}`),
@@ -47,6 +50,12 @@ class CyberBundler {
           params: [hash],
         });
       },
+      async getSupportedEntryPoints() {
+        return (client as BundlerClient).request({
+          method: "eth_supportedEntryPoints",
+          params: [],
+        });
+      },
     }));
 
     this.client = client;
@@ -54,22 +63,22 @@ class CyberBundler {
     return this;
   }
 
-  async getUserOperationByHash(hash: Hash) {
+  public async getUserOperationByHash(hash: Hash) {
     return this.client?.getUserOperationByHash(hash);
   }
 
-  async getUserOperationReceipt(hash: Hash) {
+  public async getUserOperationReceipt(hash: Hash) {
     return this.client?.getUserOperationReceipt(hash);
   }
 
-  async sendUserOperation(
+  public async sendUserOperation(
     userOperation: UserOperation,
     entryPointAddress: Address
   ) {
     return this.client?.sendUserOperation(userOperation, entryPointAddress);
   }
 
-  async estimateUserOperationGas(
+  public async estimateUserOperationGas(
     userOperation: UserOperation,
     entryPointAddress: Address
   ) {
@@ -77,6 +86,10 @@ class CyberBundler {
       userOperation,
       entryPointAddress
     );
+  }
+
+  public async getSupportedEntryPoints() {
+    return this.client?.getSupportedEntryPoints();
   }
 }
 
