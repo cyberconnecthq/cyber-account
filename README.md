@@ -4,13 +4,13 @@ CyberAccount SDK is the official NPM package that implements CyberConnect V3 acc
 
 ## Installation
 
-```jsx
+```javascript
 npm install @cyberlab/cyber-account
 ```
 
 ## Getting Started
 
-```jsx
+```javascript
 const cyberBundler = new CyberBundler({
   rpcUrl: "https://api.stg.cyberconnect.dev/cyberaccount/bundler/v1/rpc",
   appId: "ab23459a-32d7-4235-8129-77bd5de27fb1",
@@ -67,8 +67,8 @@ cyberAccount.sendTransaction({
 - owner: The owner of a CyberAccount (Check [Signing the user operation hash section](#signing-the-user-operation-hash) for the details).
   ```typescript
   type Owner = {
-  	address: Address;
-  	signMessage: async (message: string) => Promise<Hash>;
+    address: Address;
+    signMessage: async (message: string) => Promise<Hash>;
   }
   ```
 - bundler (CyberBundler): An instance of [`CyberBundler`](#cyberbundler) for handling the CyberAccount user operations.
