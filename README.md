@@ -36,6 +36,13 @@ const sign = async (message) => {
   });
 };
 
+// Optional: Paymaster
+const cyberPaymaster = new CyberPaymaster({
+  rpcUrl: "<rpcUrl>",
+  appId: "<appId>",
+  jwt: "<JWT>",
+});
+
 const cyberAccount = new CyberAccount({
   chain: {
     id: 420,
@@ -46,6 +53,7 @@ const cyberAccount = new CyberAccount({
     signMessage: sign,
   },
   bundler: cyberBundler,
+  paymaster: cyberPaymaster,
 });
 
 cyberAccount.sendTransaction({
@@ -59,7 +67,7 @@ cyberAccount.sendTransaction({
 
 ## CyberAccount
 
-`class CyberAccount({chain, owner, bundler})`
+`class CyberAccount({chain, owner, bundler, paymaster})`
 
 ### Parameters
 
@@ -72,13 +80,17 @@ cyberAccount.sendTransaction({
   };
   ```
 - owner: The owner of a CyberAccount (Check [Signing the user operation hash section](#signing-the-user-operation-hash) for the details).
+
   ```typescript
   type Owner = {
     address: Address;
     signMessage: async (message: string) => Promise<Hash>;
   }
   ```
+
 - bundler (CyberBundler): An instance of [`CyberBundler`](#cyberbundler) for handling the CyberAccount user operations.
+
+- paymaster (CyberPaymaster - Optional): An instance of [`CyberPaymaster`](#cyberpaymaster) for sponsoring the CyberAccount transactions.
 
 ### Signing the user operation hash
 
@@ -118,6 +130,7 @@ const sign = async (userOperationHash) => {
 - `owner` Owner - The owner of the CyberAccount
 - `address` Address - The contract address of the CyberAccount
 - `bundler` CyberBundler - The Bundler for handling the CyberAccount user operations.
+- `paymaster` CyberPaymaster - The Paymaster for sponsoring the CyberAccount transactions.
 
 ### Methods
 
@@ -125,7 +138,8 @@ const sign = async (userOperationHash) => {
 - `getAccountInitCode: async () => Hex;` - Returns the init code of the CyberAccount.
 - `getCallData: (userOperationCallData: UserOperationCallData);` - Get the encoded executable call data.
 - `getSignature: (rawSig: Hash) => Hash;` - Get the wrapped signature for validation.
-- `sendTransaction: async (transcationData: TransactionData) => Promise<Hash | null>` - Send a transaction using the CyberAccount.
+- `sendTransaction: async (transcationData: TransactionData, {disablePaymaster?: boolean}) => Promise<Hash | null>` - Send a transaction using the CyberAccount.
+- `estimateTransaction: async (transcationData: TransactionData) => Promise<EstimateUserOperationReturn>` - (Only available when CyberPaymaster is set.) Estimate the credit cost of a transaction using the CyberAccount.
 
 ## CyberBundler
 
@@ -145,3 +159,23 @@ const cyberBundler = new CyberBundler({
 - `getUserOperationByHash` - Returns a user operation based on the `userOperationHash`.
 - `estimateUserOperationGas` - Estimate the gas cost of a user operation.
 - `supportedEntryPoints` - Returns an array of the entryPoint addresses supported by the client.
+
+## CyberPaymaster
+
+CyberPaymaster is a Paymaster class for sponsoring CyberAccount transactions.
+
+```typescript
+const cyberPaymaster = new CyberPaymaster({
+  rpcUrl: "<rpcUrl>",
+  appId: "<appId>",
+  jwt: "<JWT>",
+});
+```
+
+### Methods
+
+- `getUserCredit` - Returns the user credit.
+- `estimateUserOperation` - Estimate the credit cost of a user operation.
+- `sponsorUserOperation` - Returns the complete ready-for-sign user operation with `paymasterAndData`.
+- `rejectUserOperation` - Rejects a user operation.
+- `listPendingUserOperations` - Returns a list of pending user operations.

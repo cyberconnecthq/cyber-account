@@ -14,11 +14,14 @@ import {
 } from "viem";
 import CyberFactory from "./CyberFactory";
 import CyberBundler from "./CyberBundler";
+import CyberPaymaster from "./CyberPaymaster";
 import { publicClients } from "./rpcClients";
 import {
   type UserOperation,
   type UserOperationCallData,
   type CyberAccountOwner,
+  type TransactionData,
+  type EstimateUserOperationReturn,
 } from "./types";
 import { EntryPointAbi, KernelAccountAbi } from "./ABIs";
 
@@ -26,6 +29,7 @@ interface CyberAccountParams {
   owner: CyberAccountOwner;
   chain: Partial<Chain> & { id: Chain["id"]; rpcUrl?: string };
   bundler: CyberBundler;
+  paymaster?: CyberPaymaster;
 }
 
 class CyberAccount {
@@ -37,9 +41,10 @@ class CyberAccount {
   public address: Address;
   public isDeployed?: boolean;
   private initCode?: Hex;
+  public paymaster?: CyberPaymaster;
 
   constructor(params: CyberAccountParams) {
-    const { chain, owner, bundler } = params;
+    const { chain, owner, bundler, paymaster } = params;
     this.chain = chain;
     this.owner = owner;
     this.factory = new CyberFactory({
@@ -49,6 +54,7 @@ class CyberAccount {
     this.address = this.factory.calculateContractAccountAddress();
     this.publicClient = this.getRpcClient(chain);
     this.bundler = bundler.connect(chain.id);
+    this.paymaster = paymaster?.connect(chain.id);
   }
 
   private getRpcClient(
@@ -104,7 +110,6 @@ class CyberAccount {
     const { to, value, data } = callData;
 
     if (!to || !data) {
-      // TODO: implement Error class
       throw new Error("to and data must not be empty.");
     }
 
@@ -116,11 +121,19 @@ class CyberAccount {
   }
 
   public async sendTransaction(
-    transactionData: UserOperationCallData & {
-      maxFeePerGas: bigint;
-      maxPriorityFeePerGas: bigint;
-    }
+    transactionData: TransactionData,
+    { disablePaymaster = false }: { disablePaymaster?: boolean } = {}
   ): Promise<Hash | undefined> {
+    if (this.paymaster && !disablePaymaster) {
+      return await this.sendTransactionWithPaymaster(transactionData);
+    }
+
+    return await this.sendTransactionWithoutPaymaster(transactionData);
+  }
+
+  private async getDraftedUserOperation(
+    transactionData: TransactionData
+  ): Promise<UserOperation> {
     const sender = this.address;
 
     const values = await Promise.all([
@@ -144,7 +157,7 @@ class CyberAccount {
       transactionData
     );
 
-    let draftedUserOperation: UserOperation = {
+    return {
       sender,
       nonce,
       initCode,
@@ -157,6 +170,14 @@ class CyberAccount {
       paymasterAndData,
       signature,
     };
+  }
+
+  public async sendTransactionWithoutPaymaster(
+    transactionData: TransactionData
+  ): Promise<Hash | undefined> {
+    let draftedUserOperation = await this.getDraftedUserOperation(
+      transactionData
+    );
 
     const estimatedGasValues = await this.bundler.estimateUserOperationGas(
       draftedUserOperation,
@@ -185,9 +206,112 @@ class CyberAccount {
     );
   }
 
+  public async sendTransactionWithPaymaster(
+    transactionData: TransactionData
+  ): Promise<Hash | undefined> {
+    const sender = this.address;
+    const nonce = null;
+
+    let maxFeePerGas: Hex = "0x0";
+    let maxPriorityFeePerGas: Hex = "0x0";
+
+    const { to, value, data } = transactionData;
+
+    if (to === undefined || value === undefined || data === undefined) {
+      throw new Error("{to, value and data} must not be undefined");
+    }
+
+    if (transactionData.maxFeePerGas && transactionData.maxPriorityFeePerGas) {
+      maxFeePerGas = toHex(transactionData.maxFeePerGas);
+      maxPriorityFeePerGas = toHex(transactionData.maxPriorityFeePerGas);
+    } else {
+      const estimation = await this.paymaster!.estimateUserOperation(
+        {
+          sender,
+          to: transactionData.to,
+          value: value.toString(),
+          callData: data,
+          nonce: nonce,
+          ep: CyberBundler.entryPointAddress,
+        },
+
+        { owner: this.owner.address }
+      );
+
+      maxFeePerGas = estimation?.maxFeePerGas || maxFeePerGas;
+      maxPriorityFeePerGas =
+        estimation?.maxPriorityFeePerGas || maxPriorityFeePerGas;
+    }
+
+    const sponsoredResult = await this.paymaster!.sponsorUserOperation(
+      {
+        sender,
+        to: transactionData.to,
+        value: value.toString(),
+        callData: data,
+        maxFeePerGas: maxFeePerGas,
+        maxPriorityFeePerGas: maxPriorityFeePerGas,
+        nonce: nonce,
+        ep: CyberBundler.entryPointAddress,
+      },
+      { owner: this.owner.address }
+    );
+
+    if (!sponsoredResult) {
+      throw new Error("Sponsor user operation failed.");
+    }
+
+    const rawSignature = await this.owner.signMessage(
+      sponsoredResult.userOperationHash
+    );
+
+    const ecdsaSignature = this.addValidatorToSignature(rawSignature);
+
+    const signedUserOperation = {
+      ...sponsoredResult.userOperation,
+      signature: ecdsaSignature,
+    };
+
+    return await this.bundler.sendUserOperation(
+      signedUserOperation,
+      CyberBundler.entryPointAddress
+    );
+  }
+
+  public async estimateTransaction(
+    transactionData: TransactionData
+  ): Promise<EstimateUserOperationReturn | undefined> {
+    if (!this.paymaster) {
+      throw new Error("Paymaster is not set.");
+    }
+
+    const sender = this.address;
+    const nonce = null;
+
+    const { to, value, data } = transactionData;
+
+    if (to === undefined || value === undefined || data === undefined) {
+      throw new Error("{to, value and data} must not be undefined.");
+    }
+
+    const estimation = await this.paymaster.estimateUserOperation(
+      {
+        sender,
+        to: transactionData.to,
+        value: value.toString(),
+        callData: data,
+        nonce: nonce,
+        ep: CyberBundler.entryPointAddress,
+      },
+      { owner: this.owner.address }
+    );
+
+    return estimation;
+  }
+
   private async calculateGasFees(customizedFees?: {
-    maxFeePerGas: bigint;
-    maxPriorityFeePerGas: bigint;
+    maxFeePerGas?: bigint;
+    maxPriorityFeePerGas?: bigint;
   }) {
     const { maxFeePerGas, maxPriorityFeePerGas } = customizedFees || {};
 
