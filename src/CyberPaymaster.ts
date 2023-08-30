@@ -1,4 +1,10 @@
-import { createClient, http, type Address, type Hash } from "viem";
+import {
+  createClient,
+  type Address,
+  type Hash,
+  custom,
+  type CustomTransport,
+} from "viem";
 import { mainnet } from "viem/chains";
 import type {
   PaymasterClient,
@@ -10,29 +16,62 @@ import type {
 type Params = {
   appId: string;
   rpcUrl: string;
-  jwt: string;
+  generateJwt: (cyberAccountAddress: Address) => Promise<string>;
 };
 
 class CyberPaymaster {
   public appId: string;
   public rpcUrl: string;
-  private jwt: string;
-  private client?: PaymasterClient;
+  private client?: PaymasterClient<CustomTransport>;
+  public generateJwt: (cyberAccountAddress: Address) => Promise<string>;
+  public jwt?: string;
+  static needAuthMethods = ["cc_sponsorUserOperation"];
 
-  constructor({ appId, rpcUrl, jwt }: Params) {
+  constructor({ appId, rpcUrl, generateJwt }: Params) {
     this.appId = appId;
     this.rpcUrl = rpcUrl;
-    this.jwt = jwt;
+    this.generateJwt = generateJwt;
   }
 
-  public connect(chainId: number) {
-    const client: PaymasterClient = createClient({
+  public connect(chainId: number, cyberAccountAddress: Address) {
+    const self = this;
+    let id = 0;
+
+    const client: PaymasterClient<CustomTransport> = createClient({
       chain: mainnet,
-      transport: http(`${this.rpcUrl}?chainId=${chainId}&appId=${this.appId}`, {
-        fetchOptions: {
-          headers: {
-            Authorization: `Bearer ${this.jwt}`,
-          },
+      transport: custom({
+        async request({ method, params }) {
+          let auth: { Authorization?: string } = {};
+
+          if (CyberPaymaster.needAuthMethods.includes(method)) {
+            let jwt: string;
+            if (self.jwt) {
+              jwt = self.jwt;
+            } else {
+              jwt = await self.generateJwt(cyberAccountAddress);
+              self.jwt = jwt;
+            }
+
+            auth = { Authorization: `Bearer ${jwt}` };
+          }
+
+          const reponse = await fetch(
+            `${self.rpcUrl}?chainId=${chainId}&appId=${self.appId}`,
+            {
+              method: "POST",
+              body: JSON.stringify({
+                method,
+                params,
+                id: id++,
+                jsonrpc: "2.0",
+              }),
+              headers: auth,
+            }
+          );
+
+          const res = await reponse.json();
+
+          return res.result;
         },
       }),
     }).extend(() => ({

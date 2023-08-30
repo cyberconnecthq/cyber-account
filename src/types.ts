@@ -8,6 +8,7 @@ import type {
   Account,
   TransactionReceipt,
   Log,
+  Transport,
 } from "viem";
 
 export type UserOperation = {
@@ -219,8 +220,8 @@ export type PaymasterActions = {
   ) => Promise<PendingUserOperation[]>;
 };
 
-export type PaymasterClient = Client<
-  HttpTransport,
+export type PaymasterClient<T extends Transport = HttpTransport> = Client<
+  T,
   Chain,
   Account | undefined,
   PaymasterRpcRequests,

@@ -54,7 +54,7 @@ class CyberAccount {
     this.address = this.factory.calculateContractAccountAddress();
     this.publicClient = this.getRpcClient(chain);
     this.bundler = bundler.connect(chain.id);
-    this.paymaster = paymaster?.connect(chain.id);
+    this.paymaster = paymaster?.connect(chain.id, this.address);
   }
 
   private getRpcClient(

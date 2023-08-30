@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "lib": ["ES6", "ESNext"],
+    "lib": ["ES6", "ESNext", "DOM"],
     "target": "ESNext",
     "module": "CommonJS",
     "moduleResolution": "Node",
