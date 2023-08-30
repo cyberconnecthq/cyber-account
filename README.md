@@ -40,7 +40,7 @@ const sign = async (message) => {
 const cyberPaymaster = new CyberPaymaster({
   rpcUrl: "<rpcUrl>",
   appId: "<appId>",
-  jwt: "<JWT>",
+  generateJwt: (cyberAccountAddress) => jwt,
 });
 
 const cyberAccount = new CyberAccount({
@@ -168,7 +168,7 @@ CyberPaymaster is a Paymaster class for sponsoring CyberAccount transactions.
 const cyberPaymaster = new CyberPaymaster({
   rpcUrl: "<rpcUrl>",
   appId: "<appId>",
-  jwt: "<JWT>",
+  generateJwt: (cyberAccountAddress) => jwt,
 });
 ```
 
