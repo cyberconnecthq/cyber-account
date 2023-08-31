@@ -167,6 +167,7 @@ enum UserOperationStatus {
 }
 
 export type PendingUserOperation = {
+  userOperationHash: Hash;
   userOperation: UserOperation;
   chainId: number;
   credit: Hex;
