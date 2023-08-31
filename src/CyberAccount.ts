@@ -3,6 +3,7 @@ import {
   type Chain,
   concat,
   encodeFunctionData,
+  decodeFunctionData,
   type Hex,
   type PublicClient,
   type Hash,
@@ -104,6 +105,15 @@ class CyberAccount {
     this.initCode = initCode;
 
     return initCode;
+  }
+
+  public decodeTransactionCallData(data: Hex) {
+    const { functionName, args } = decodeFunctionData({
+      abi: KernelAccountAbi,
+      data,
+    });
+
+    return { functionName, args };
   }
 
   private encodeExecuteCallData(callData: UserOperationCallData) {
