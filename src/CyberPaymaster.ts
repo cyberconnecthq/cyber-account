@@ -25,7 +25,10 @@ class CyberPaymaster {
   private client?: PaymasterClient<CustomTransport>;
   public generateJwt: (cyberAccountAddress: Address) => Promise<string>;
   public jwt?: string;
-  static needAuthMethods = ["cc_sponsorUserOperation"];
+  static needAuthMethods = [
+    "cc_sponsorUserOperation",
+    "cc_rejectUserOperation",
+  ];
 
   constructor({ appId, rpcUrl, generateJwt }: Params) {
     this.appId = appId;
