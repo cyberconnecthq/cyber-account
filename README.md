@@ -28,7 +28,9 @@ const walletClient = createWalletClient({
   transport: custom(window.ethereum),
 });
 
-const ownerAddress = "0x370CA01D7314e3EEa59d57E343323bB7e9De24C6";
+const accounts = await walletClient.requestAddresses();
+const ownerAddress = accounts[0];
+
 const sign = async (message) => {
   return await walletClient.signMessage({
     account: ownerAddress,
@@ -104,7 +106,9 @@ const walletClient = createWalletClient({
   transport: custom(window.ethereum),
 });
 
-const ownerAddress = "0x370CA01D7314e3EEa59d57E343323bB7e9De24C6";
+const accounts = await walletClient.requestAddresses();
+const ownerAddress = accounts[0];
+
 const sign = async (userOperationHash) => {
   return await walletClient.signMessage({
     account: ownerAddress,
