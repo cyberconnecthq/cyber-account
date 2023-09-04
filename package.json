@@ -2,29 +2,15 @@
   "name": "@cyberlab/cyber-account",
   "version": "0.0.0-development",
   "description": "",
-  "main": "index.js",
-  "types": "./lib/cjs/types/index.d.ts",
+  "main": "./lib/src/index.js",
+  "types": "./lib/src/index.d.ts",
   "files": [
     "lib/**/*"
   ],
-  "exports": {
-    ".": {
-      "import": {
-        "types": "./lib/esm/types/index.d.ts",
-        "default": "./lib/esm/index.mjs"
-      },
-      "require": {
-        "types": "./lib/cjs/types/index.d.ts",
-        "default": "./lib/cjs/index.js"
-      }
-    }
-  },
   "scripts": {
     "clean": "rm -rf ./lib",
     "test": "jest",
-    "build": "pnpm run test && pnpm run clean && pnpm run build:esm && pnpm run build:cjs",
-    "build:esm": "tsc -p ./tsconfig.esm.json && mv lib/esm/index.js lib/esm/index.mjs",
-    "build:cjs": "tsc -p ./tsconfig.cjs.json",
+    "build": "pnpm clean && tsc",
     "prepack": "pnpm run build",
     "semantic-release": "semantic-release"
   },

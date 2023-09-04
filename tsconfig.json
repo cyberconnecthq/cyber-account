@@ -1,6 +1,9 @@
 {
   "compilerOptions": {
+    "target": "ESNext",
     "strict": true,
+    "moduleResolution": "nodenext",
+    "module": "NodeNext",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
@@ -10,6 +13,5 @@
     "declarationMap": true,
     "allowSyntheticDefaultImports": true,
     "outDir": "./lib"
-  },
-  "files": ["./src/index.ts"]
+  }
 }
