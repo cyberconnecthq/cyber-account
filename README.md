@@ -176,6 +176,11 @@ const cyberPaymaster = new CyberPaymaster({
 });
 ```
 
+### RPC Urls
+
+- **For development** `https://api.stg.cyberconnect.dev/cyberaccount/paymaster/v1/rpc`
+- **For production** `https://api.cyberconnect.dev/cyberaccount/paymaster/v1/rpc`
+
 ### Methods
 
 - `getUserCredit` - Returns the user credit.
