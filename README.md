@@ -143,7 +143,7 @@ const sign = async (userOperationHash) => {
 - `getCallData: (userOperationCallData: UserOperationCallData);` - Get the encoded executable call data.
 - `getSignature: (rawSig: Hash) => Hash;` - Get the wrapped signature for validation.
 - `sendTransaction: async (transcationData: TransactionData, {disablePaymaster?: boolean}) => Promise<Hash | null>` - Send a transaction using the CyberAccount.
-- `estimateTransaction: async (transcationData: TransactionData) => Promise<EstimateUserOperationReturn>` - (Only available when CyberPaymaster is set.) Estimate the credit cost of a transaction using the CyberAccount.
+- `estimateTransaction: async (transcationData: TransactionData, {disablePaymaster?: boolean}) => Promise<EstimateUserOperationReturn>` - Estimate the credit cost of a transaction using the CyberAccount if the CyberPaymaster is provided, otherwise return the estimated gas from the bundler.
 
 ## CyberBundler
 
@@ -179,10 +179,13 @@ const cyberPaymaster = new CyberPaymaster({
 ### RPC Urls
 
 - **For development**
+
   ```
   https://api.stg.cyberconnect.dev/cyberaccount/paymaster/v1/rpc
   ```
+
 - **For production**
+
   ```
   https://api.cyberconnect.dev/cyberaccount/paymaster/v1/rpc
   ```
