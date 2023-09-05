@@ -3,7 +3,7 @@ import { mainnet } from "viem/chains";
 import type { BundlerClient, UserOperation } from "./types";
 
 class CyberBundler {
-  private client?: BundlerClient;
+  private clients: Record<number, BundlerClient>;
   public rpcUrl: string;
   public appId: string;
 
@@ -13,6 +13,7 @@ class CyberBundler {
   constructor({ rpcUrl, appId }: { rpcUrl: string; appId: string }) {
     this.rpcUrl = rpcUrl;
     this.appId = appId;
+    this.clients = {};
   }
 
   public connect(chainId: number) {
@@ -58,38 +59,43 @@ class CyberBundler {
       },
     }));
 
-    this.client = client;
+    this.clients[chainId] = client;
 
     return this;
   }
 
-  public async getUserOperationByHash(hash: Hash) {
-    return this.client?.getUserOperationByHash(hash);
+  public async getUserOperationByHash(hash: Hash, chainId: number) {
+    return this.clients[chainId]?.getUserOperationByHash(hash);
   }
 
-  public async getUserOperationReceipt(hash: Hash) {
-    return this.client?.getUserOperationReceipt(hash);
+  public async getUserOperationReceipt(hash: Hash, chainId: number) {
+    return this.clients[chainId]?.getUserOperationReceipt(hash);
   }
 
   public async sendUserOperation(
     userOperation: UserOperation,
-    entryPointAddress: Address
+    entryPointAddress: Address,
+    chainId: number
   ) {
-    return this.client?.sendUserOperation(userOperation, entryPointAddress);
-  }
-
-  public async estimateUserOperationGas(
-    userOperation: UserOperation,
-    entryPointAddress: Address
-  ) {
-    return this.client?.estimateUserOperationGas(
+    return this.clients[chainId]?.sendUserOperation(
       userOperation,
       entryPointAddress
     );
   }
 
-  public async getSupportedEntryPoints() {
-    return this.client?.getSupportedEntryPoints();
+  public async estimateUserOperationGas(
+    userOperation: UserOperation,
+    entryPointAddress: Address,
+    chainId: number
+  ) {
+    return this.clients[chainId]?.estimateUserOperationGas(
+      userOperation,
+      entryPointAddress
+    );
+  }
+
+  public async getSupportedEntryPoints(chainId: number) {
+    return this.clients[chainId]?.getSupportedEntryPoints();
   }
 }
 

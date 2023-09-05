@@ -22,7 +22,7 @@ type Params = {
 class CyberPaymaster {
   public appId: string;
   public rpcUrl: string;
-  private client?: PaymasterClient<CustomTransport>;
+  private clients: Record<number, PaymasterClient<CustomTransport>>;
   public generateJwt: (cyberAccountAddress: Address) => Promise<string>;
   public jwt?: string;
   static needAuthMethods = [
@@ -34,6 +34,7 @@ class CyberPaymaster {
     this.appId = appId;
     this.rpcUrl = rpcUrl;
     this.generateJwt = generateJwt;
+    this.clients = {};
   }
 
   public connect(chainId: number, cyberAccountAddress: Address) {
@@ -116,35 +117,37 @@ class CyberPaymaster {
       },
     }));
 
-    this.client = client;
+    this.clients[chainId] = client;
 
     return this;
   }
 
-  async getUserCredit(address: Address) {
-    return this.client?.getUserCredit(address);
+  async getUserCredit(address: Address, chainId: number) {
+    return this.clients[chainId]?.getUserCredit(address);
   }
 
   async estimateUserOperation(
     data: EstimatedPaymasterData,
-    context: PaymasterContext
+    context: PaymasterContext,
+    chainId: number
   ) {
-    return this.client?.estimateUserOperation(data, context);
+    return this.clients[chainId]?.estimateUserOperation(data, context);
   }
 
   async sponsorUserOperation(
     data: SponsoredPaymasterData,
-    context: PaymasterContext
+    context: PaymasterContext,
+    chainId: number
   ) {
-    return this.client?.sponsorUserOperation(data, context);
+    return this.clients[chainId]?.sponsorUserOperation(data, context);
   }
 
-  async rejectUserOperation(hash: Hash) {
-    return this.client?.rejectUserOperation(hash);
+  async rejectUserOperation(hash: Hash, chainId: number) {
+    return this.clients[chainId]?.rejectUserOperation(hash);
   }
 
-  async listPendingUserOperations(address: Address) {
-    return this.client?.listPendingUserOperations(address);
+  async listPendingUserOperations(address: Address, chainId: number) {
+    return this.clients[chainId]?.listPendingUserOperations(address);
   }
 }
 
