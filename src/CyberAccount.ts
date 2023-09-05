@@ -23,6 +23,7 @@ import {
   type CyberAccountOwner,
   type TransactionData,
   type EstimateUserOperationReturn,
+  Estimation,
 } from "./types";
 import { EntryPointAbi, KernelAccountAbi } from "./ABIs";
 
@@ -303,12 +304,19 @@ class CyberAccount {
   }
 
   public async estimateTransaction(
-    transactionData: TransactionData
-  ): Promise<EstimateUserOperationReturn | undefined> {
-    if (!this.paymaster) {
-      throw new Error("Paymaster is not set.");
+    transactionData: TransactionData,
+    { disablePaymaster = false }: { disablePaymaster?: boolean } = {}
+  ): Promise<EstimateUserOperationReturn | Estimation | undefined> {
+    if (this.paymaster && !disablePaymaster) {
+      return await this.estimateTransactionWithPaymaster(transactionData);
     }
 
+    return await this.estimateTransactionWithoutPaymaster(transactionData);
+  }
+
+  public async estimateTransactionWithPaymaster(
+    transactionData: TransactionData
+  ): Promise<EstimateUserOperationReturn | undefined> {
     const sender = this.address;
     const nonce = null;
 
@@ -318,7 +326,7 @@ class CyberAccount {
       throw new Error("{to, value and data} must not be undefined.");
     }
 
-    const estimation = await this.paymaster.estimateUserOperation(
+    const estimation = await this.paymaster?.estimateUserOperation(
       {
         sender,
         to: transactionData.to,
@@ -332,6 +340,22 @@ class CyberAccount {
     );
 
     return estimation;
+  }
+
+  public async estimateTransactionWithoutPaymaster(
+    transactionData: TransactionData
+  ): Promise<Estimation | undefined> {
+    let draftedUserOperation = await this.getDraftedUserOperation(
+      transactionData
+    );
+
+    const estimatedGasValues = await this.bundler.estimateUserOperationGas(
+      draftedUserOperation,
+      CyberBundler.entryPointAddress,
+      this.chain.id
+    );
+
+    return estimatedGasValues;
   }
 
   private async calculateGasFees(customizedFees?: {
