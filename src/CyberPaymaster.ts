@@ -147,7 +147,9 @@ class CyberPaymaster {
   }
 
   async listPendingUserOperations(address: Address, chainId: number) {
-    return this.clients[chainId]?.listPendingUserOperations(address);
+    return await this.clients[chainId]
+      ?.listPendingUserOperations(address)
+      .then((res) => res.userOperations);
   }
 }
 

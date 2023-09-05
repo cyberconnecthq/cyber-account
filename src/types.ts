@@ -201,7 +201,7 @@ export type PaymasterRpcRequests = [
   {
     Method: "cc_listPendingUserOperations";
     Parameters: [Address];
-    ReturnType: PendingUserOperation[];
+    ReturnType: { userOperations: PendingUserOperation[] };
   }
 ];
 
@@ -218,7 +218,7 @@ export type PaymasterActions = {
   rejectUserOperation: (hash: Hash) => Promise<{ success: boolean }>;
   listPendingUserOperations: (
     address: Address
-  ) => Promise<PendingUserOperation[]>;
+  ) => Promise<{ userOperations: PendingUserOperation[] }>;
 };
 
 export type PaymasterClient<T extends Transport = HttpTransport> = Client<
