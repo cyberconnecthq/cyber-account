@@ -197,3 +197,75 @@ const cyberPaymaster = new CyberPaymaster({
 - `sponsorUserOperation` - Returns the complete ready-for-sign user operation with `paymasterAndData`.
 - `rejectUserOperation` - Rejects a user operation.
 - `listPendingUserOperations` - Returns a list of pending user operations.
+
+## RPC Errors
+
+The RPC errors from the SDK are error instances from [Viem](https://viem.sh/docs/glossary/errors.html#errors). Two types of RPC errors can be thrown from the SDK:
+
+1. Provider RPC errors
+2. RPC Request errors
+
+**Properties**
+
+- `name` - The RPC error name
+- `code` - The RPC error code
+- `details` - The RPC error details
+- `shortMessage` - The RPC error short message
+
+_We recommend using the `code` property to create a custom error handler._
+
+### Provider RPC Errors
+
+| code | description                   |
+| ---- | ----------------------------- |
+| 4001 | User denied message signature |
+
+_Check all possible provider RPC errors [here](https://eips.ethereum.org/EIPS/eip-1193#provider-errors)._
+
+### RPC Request Errors
+
+#### Bundler RPC errors
+
+For the bundler RPC errors, you can find the details in [ERC-4337](https://eips.ethereum.org/EIPS/eip-4337#rpc-methods-eth-namespace).
+
+#### Paymaster RPC errors (CyberPaymaster)
+
+| Code   | Description                   |
+| ------ | ----------------------------- |
+| -32500 | Rejected by EP or Account     |
+| -32501 | Rejected by Paymaster         |
+| -32502 | Banned Opcode                 |
+| -32503 | Short Deadline                |
+| -32504 | Banned or Throttled Paymaster |
+| -32505 | Invalid Paymaster Stake       |
+| -32506 | Invalid Aggregator            |
+| -32507 | Invalid Signature             |
+| -32601 | Method Not Found              |
+| -32602 | Invalid Params                |
+| -32603 | Internal Error                |
+| -42000 | Invalid Chain ID              |
+| -42001 | Gas Price Beyond Limit        |
+| -42002 | Invalid Sponsor Sig Type      |
+| -42003 | Invalid Sponsor Sig           |
+| -42004 | Insufficient Credits          |
+| -42005 | Failed Get Price              |
+| -42006 | Account Balance Locked        |
+| -42007 | Pimlico Call Failed           |
+| -42008 | Stackup Call Failed           |
+| -42009 | Invalid Owner                 |
+| -42010 | Invalid Calldata              |
+| -42012 | User Op Not Found             |
+| -42014 | Biconomy Call Failed          |
+| -42015 | Invalid Value                 |
+| -42016 | User Op Not Estimated         |
+| -42017 | Alchemy Call Failed           |
+| -42018 | Exist Pending User Op         |
+| -42019 | Send User Op Wrong State      |
+| -42020 | PM and Data Timeout           |
+| -42021 | Invalid Sender                |
+| -42022 | Rate Limit                    |
+| -42024 | Invalid App ID                |
+| -42025 | User Op Already Sent          |
+| -42026 | Invalid Auth Token            |
+| -42027 | Auth Not Allowed              |
+| -32521 | Execution Reverted            |

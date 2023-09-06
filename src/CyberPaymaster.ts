@@ -4,6 +4,7 @@ import {
   type Hash,
   custom,
   type CustomTransport,
+  RpcRequestError,
 } from "viem";
 import { mainnet } from "viem/chains";
 import type {
@@ -59,21 +60,32 @@ class CyberPaymaster {
             auth = { Authorization: `Bearer ${jwt}` };
           }
 
-          const reponse = await fetch(
+          const requestBody = {
+            method,
+            params,
+            id: id++,
+            jsonrpc: "2.0",
+          };
+
+          const response = await fetch(
             `${self.rpcUrl}?chainId=${chainId}&appId=${self.appId}`,
             {
               method: "POST",
-              body: JSON.stringify({
-                method,
-                params,
-                id: id++,
-                jsonrpc: "2.0",
-              }),
+              body: JSON.stringify(requestBody),
               headers: auth,
             }
           );
 
-          const res = await reponse.json();
+          const res = await response.json();
+          if (res.error) {
+            const rpcRequestError = new RpcRequestError({
+              body: requestBody,
+              url: response.url,
+              error: res.error,
+            });
+
+            throw rpcRequestError;
+          }
 
           return res.result;
         },

@@ -272,21 +272,18 @@ class CyberAccount {
       this.chain.id
     );
 
-    if (!sponsoredResult) {
-      throw new Error("Sponsor user operation failed.");
-    }
-
     let rawSignature: Hex;
     try {
       rawSignature = await this.owner.signMessage(
         sponsoredResult.userOperationHash
       );
-    } catch (e) {
+    } catch (e: unknown) {
       await this.paymaster?.rejectUserOperation(
         sponsoredResult.userOperationHash,
         this.chain.id
       );
-      throw new Error("User rejected to sign.");
+
+      throw e;
     }
 
     const ecdsaSignature = this.addValidatorToSignature(rawSignature);
