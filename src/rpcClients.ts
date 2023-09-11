@@ -8,10 +8,18 @@ import {
   baseGoerli,
   lineaTestnet,
   linea,
+  arbitrumGoerli,
+  arbitrum,
 } from "viem/chains";
 
-const testnetChains = [optimismGoerli, polygonMumbai, baseGoerli, lineaTestnet];
-const mainnetChains = [optimism, polygon, base, linea];
+const testnetChains = [
+  optimismGoerli,
+  polygonMumbai,
+  baseGoerli,
+  lineaTestnet,
+  arbitrumGoerli,
+];
+const mainnetChains = [optimism, polygon, base, linea, arbitrum];
 
 const supportedChains = [...testnetChains, ...mainnetChains];
 
