@@ -5,6 +5,10 @@ import {
   custom,
   type CustomTransport,
   RpcRequestError,
+  type PublicClient,
+  BaseError,
+  createWalletClient,
+  ChainDoesNotSupportContract,
 } from "viem";
 import { mainnet } from "viem/chains";
 import type {
@@ -13,6 +17,9 @@ import type {
   EstimatedPaymasterData,
   SponsoredPaymasterData,
 } from "./types";
+import { TokenReceiverAbi } from "./ABIs";
+import CyberAccount from "./CyberAccount";
+import { supportedChains } from "./rpcClients";
 
 type Params = {
   appId: string;
@@ -26,6 +33,13 @@ class CyberPaymaster {
   private clients: Record<number, PaymasterClient<CustomTransport>>;
   public generateJwt: (cyberAccountAddress: Address) => Promise<string>;
   public jwt?: string;
+  public publicClients: Record<number, PublicClient>;
+  public cyberAccount?: CyberAccount;
+  static testnetTokenReceiverAddress: Address =
+    "0x52b90f8e69ac72fe0f46726eadda13835cbb01fa";
+  static mainnetTokenReceiverAddress: Address =
+    "0xcd97405fb58e94954e825e46db192b916a45d412";
+
   static needAuthMethods = [
     "cc_sponsorUserOperation",
     "cc_rejectUserOperation",
@@ -36,9 +50,10 @@ class CyberPaymaster {
     this.rpcUrl = rpcUrl;
     this.generateJwt = generateJwt;
     this.clients = {};
+    this.publicClients = {};
   }
 
-  public connect(chainId: number, cyberAccountAddress: Address) {
+  public connect(cyberAccount: CyberAccount) {
     const self = this;
     let id = 0;
 
@@ -53,7 +68,7 @@ class CyberPaymaster {
             if (self.jwt) {
               jwt = self.jwt;
             } else {
-              jwt = await self.generateJwt(cyberAccountAddress);
+              jwt = await self.generateJwt(cyberAccount.address);
               self.jwt = jwt;
             }
 
@@ -68,7 +83,7 @@ class CyberPaymaster {
           };
 
           const response = await fetch(
-            `${self.rpcUrl}?chainId=${chainId}&appId=${self.appId}`,
+            `${self.rpcUrl}?chainId=${cyberAccount.chain.id}&appId=${self.appId}`,
             {
               method: "POST",
               body: JSON.stringify(requestBody),
@@ -129,7 +144,9 @@ class CyberPaymaster {
       },
     }));
 
-    this.clients[chainId] = client;
+    this.clients[cyberAccount.chain.id] = client;
+    this.publicClients[cyberAccount.chain.id] = cyberAccount.publicClient;
+    this.cyberAccount = cyberAccount;
 
     return this;
   }
@@ -162,6 +179,50 @@ class CyberPaymaster {
     return await this.clients[chainId]
       ?.listPendingUserOperations(address)
       .then((res) => res.userOperations);
+  }
+
+  public async topUp({
+    sender,
+    amount,
+    chainId,
+    to,
+  }: {
+    sender?: Address;
+    amount: bigint;
+    chainId: number;
+    to?: Address;
+  }) {
+    const chain = supportedChains.find((chain) => chain.id === chainId);
+
+    if (!chain) {
+      throw new ChainDoesNotSupportContract({
+        //@ts-ignore
+        chain: {
+          //@ts-ignore
+          name: chainId.toString(),
+        },
+        contract: { name: "CyberPaymaster Token Receiver" },
+      });
+    }
+
+    const walletClient = createWalletClient({
+      chain,
+      // @ts-ignore
+      transport: custom(globalThis.ethereum),
+    });
+
+    const { request } = await this.publicClients[chain.id]?.simulateContract({
+      account: sender || this.cyberAccount?.owner.address,
+      address: chain.testnet
+        ? CyberPaymaster.testnetTokenReceiverAddress
+        : CyberPaymaster.mainnetTokenReceiverAddress,
+      abi: TokenReceiverAbi,
+      functionName: "depositTo",
+      args: [to || this.cyberAccount?.address],
+      value: amount,
+    });
+
+    return await walletClient.writeContract(request);
   }
 }
 

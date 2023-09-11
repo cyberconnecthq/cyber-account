@@ -39,7 +39,7 @@ class CyberAccount {
   public owner: CyberAccountOwner;
   public chain: Partial<Chain> & { id: Chain["id"]; rpcUrl?: string };
   public factory: CyberFactory;
-  private publicClient: PublicClient;
+  public publicClient: PublicClient;
   public address: Address;
   public isDeployed?: boolean;
   private initCode?: Hex;
@@ -56,7 +56,7 @@ class CyberAccount {
     this.address = this.factory.calculateContractAccountAddress();
     this.publicClient = this.getRpcClient(chain);
     this.bundler = bundler.connect(chain.id);
-    this.paymaster = paymaster?.connect(chain.id, this.address);
+    this.paymaster = paymaster?.connect(this);
   }
 
   private getRpcClient(

@@ -1,4 +1,12 @@
-import { createPublicClient, http, type PublicClient } from "viem";
+import {
+  createPublicClient,
+  http,
+  type PublicClient,
+  type WalletClient,
+  createWalletClient,
+  custom,
+  Chain,
+} from "viem";
 import {
   optimismGoerli,
   optimism,
@@ -21,7 +29,7 @@ const testnetChains = [
 ];
 const mainnetChains = [optimism, polygon, base, linea, arbitrum];
 
-const supportedChains = [...testnetChains, ...mainnetChains];
+const supportedChains: Chain[] = [...testnetChains, ...mainnetChains];
 
 const publicClients: Record<string, (url?: string) => PublicClient> =
   supportedChains.reduce(
@@ -36,4 +44,4 @@ const publicClients: Record<string, (url?: string) => PublicClient> =
     {}
   );
 
-export { publicClients };
+export { publicClients, supportedChains };
