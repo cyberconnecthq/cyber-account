@@ -57,13 +57,57 @@ const cyberAccount = new CyberAccount({
   bundler: cyberBundler,
   paymaster: cyberPaymaster,
 });
+```
 
+### Sending Native Token
+
+```javascript
 cyberAccount.sendTransaction({
   to: "0x1e6754b227c6ae4b0ca61d82f79d60660737554a",
   value: parseUnits("0.0001", 18),
   data: "0x",
 });
 ```
+
+- `to` - Address of the token receiver
+- `value` - The amount of the native token to send
+- `data` - The encoded data of the transaction
+
+### Sending ERC20 Tokens
+
+Sending ERC20 tokens is different from sending the native token, it requires two steps:
+
+1. Encode the transaction data with the ERC20 contract ABI
+
+   ```javascript
+   const encoded = encodeFunctionData({
+     abi: erc20ABI,
+     functionName: "transfer",
+     args: [
+       "0x85AAc6211aC91E92594C01F8c9557026797493AE",
+       parseUnits("0.5", 18),
+     ],
+   });
+   ```
+
+   Argument list:
+
+   - Address - The address of the token receiver
+   - Amount - The amount of the token to send
+
+2. Send the transaction with the encoded data
+
+   ```javascript
+   cyberAccount.sendTransaction({
+     to: "0x32307adfFE088e383AFAa721b06436aDaBA47DBE",
+     value: BigInt(0),
+     data: encoded,
+   });
+   ```
+
+- `to` - Address of the ERC20 token contract
+- `value` - The amount of native token to send, it should be 0
+- `data` - The encoded ERC20 token transaction detail
 
 ---
 
