@@ -241,7 +241,7 @@ const cyberPaymaster = new CyberPaymaster({
 - `sponsorUserOperation` - Returns the complete ready-for-sign user operation with `paymasterAndData`.
 - `rejectUserOperation` - Rejects a user operation.
 - `listPendingUserOperations` - Returns a list of pending user operations.
-- `topUp` - Top up the user credit.
+- `topUp: ({amount, chainId, sender, to}) => Promise<Hash>` - Tops up the user credit, it returns the top up transaction hash.
   - `amount` - The amount of credit to top up.
   - `chainId` - The target chain id.
   - `sender` - (Optional) The address of the top up payer, it's CyberAccount owner address by default.,
