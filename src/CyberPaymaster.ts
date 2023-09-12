@@ -16,6 +16,7 @@ import type {
   PaymasterContext,
   EstimatedPaymasterData,
   SponsoredPaymasterData,
+  TopUpContractRequest,
 } from "./types";
 import { TokenReceiverAbi } from "./ABIs";
 import CyberAccount from "./CyberAccount";
@@ -186,11 +187,13 @@ class CyberPaymaster {
     amount,
     chainId,
     to,
+    writeContract,
   }: {
     sender?: Address;
     amount: bigint;
     chainId: number;
     to?: Address;
+    writeContract?: (request: TopUpContractRequest) => Promise<Hash>;
   }) {
     const chain = supportedChains.find((chain) => chain.id === chainId);
 
@@ -221,6 +224,10 @@ class CyberPaymaster {
       args: [to || this.cyberAccount?.address],
       value: amount,
     });
+
+    if (writeContract) {
+      return await writeContract(request);
+    }
 
     return await walletClient.writeContract(request);
   }

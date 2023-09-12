@@ -9,7 +9,9 @@ import type {
   TransactionReceipt,
   Log,
   Transport,
+  WriteContractParameters,
 } from "viem";
+import { TokenReceiverAbi } from "./ABIs";
 
 export type UserOperation = {
   sender: Address;
@@ -235,3 +237,7 @@ export type OnChainUserOperation = UserOperation & {
   entryPoint: Address;
   transactionHash: Hash;
 };
+
+export type TopUpContractRequest = WriteContractParameters<
+  typeof TokenReceiverAbi
+>;
