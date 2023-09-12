@@ -35,7 +35,7 @@ class CyberPaymaster {
   public generateJwt: (cyberAccountAddress: Address) => Promise<string>;
   public jwt?: string;
   public publicClients: Record<number, PublicClient>;
-  public cyberAccount?: CyberAccount;
+  public cyberAccounts: Record<number, CyberAccount>;
   static testnetTokenReceiverAddress: Address =
     "0x52b90f8e69ac72fe0f46726eadda13835cbb01fa";
   static mainnetTokenReceiverAddress: Address =
@@ -52,6 +52,7 @@ class CyberPaymaster {
     this.generateJwt = generateJwt;
     this.clients = {};
     this.publicClients = {};
+    this.cyberAccounts = {};
   }
 
   public connect(cyberAccount: CyberAccount) {
@@ -147,7 +148,7 @@ class CyberPaymaster {
 
     this.clients[cyberAccount.chain.id] = client;
     this.publicClients[cyberAccount.chain.id] = cyberAccount.publicClient;
-    this.cyberAccount = cyberAccount;
+    this.cyberAccounts[cyberAccount.chain.id] = cyberAccount;
 
     return this;
   }
@@ -196,6 +197,7 @@ class CyberPaymaster {
     writeContract?: (request: TopUpContractRequest) => Promise<Hash>;
   }) {
     const chain = supportedChains.find((chain) => chain.id === chainId);
+    const cyberAccount = this.cyberAccounts[chainId];
 
     if (!chain) {
       throw new ChainDoesNotSupportContract({
@@ -208,6 +210,12 @@ class CyberPaymaster {
       });
     }
 
+    if (!cyberAccount) {
+      throw new BaseError(`CyberAccount not found on ${chain.name}.`, {
+        details: `CyberAccount is not found on ${chain.name}, make sure to create a CyberAccount on this chain with the right CyberPaymaster instance.`,
+      });
+    }
+
     const walletClient = createWalletClient({
       chain,
       // @ts-ignore
@@ -215,13 +223,13 @@ class CyberPaymaster {
     });
 
     const { request } = await this.publicClients[chain.id]?.simulateContract({
-      account: sender || this.cyberAccount?.owner.address,
+      account: sender || cyberAccount?.owner.address,
       address: chain.testnet
         ? CyberPaymaster.testnetTokenReceiverAddress
         : CyberPaymaster.mainnetTokenReceiverAddress,
       abi: TokenReceiverAbi,
       functionName: "depositTo",
-      args: [to || this.cyberAccount?.address],
+      args: [to || cyberAccount?.address],
       value: amount,
     });
 
