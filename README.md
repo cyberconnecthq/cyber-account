@@ -241,11 +241,12 @@ const cyberPaymaster = new CyberPaymaster({
 - `sponsorUserOperation` - Returns the complete ready-for-sign user operation with `paymasterAndData`.
 - `rejectUserOperation` - Rejects a user operation.
 - `listPendingUserOperations` - Returns a list of pending user operations.
-- `topUp: ({amount, chainId, sender, to}) => Promise<Hash>` - Tops up the user credit, it returns the top up transaction hash.
+- `topUp: ({amount, chainId, sender, to, writeContract}) => Promise<Hash>` - Tops up the user credit, it returns the top up transaction hash.
   - `amount` - The amount of credit to top up.
   - `chainId` - The target chain id.
   - `sender` - (Optional) The address of the top up payer, it's CyberAccount owner address by default.,
   - `to` - (Optional) The address of the gas credit consumer, it's CyberAccount address by default.
+  - `writeContract: (request: TopUpContractRequest) => Promise<Hash>` - (Optional) Overrides the default contract writing function.
 
 ## RPC Errors
 
