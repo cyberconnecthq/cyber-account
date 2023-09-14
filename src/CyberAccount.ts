@@ -391,11 +391,13 @@ class CyberAccount {
   }
 
   private async getUserOperationNonce() {
+    const appIdHex = ("0x" + this.bundler.appId.split("-").join("")) as Hex;
+
     const nonce = await this.publicClient.readContract({
       address: CyberBundler.entryPointAddress,
       abi: EntryPointAbi,
       functionName: "getNonce",
-      args: [this.address, BigInt(0)],
+      args: [this.address, hexToBigInt(appIdHex)],
     });
 
     return nonce;
