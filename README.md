@@ -2,6 +2,10 @@
 
 CyberAccount SDK is the official NPM package that implements CyberConnect V3 account abstraction.
 
+## Examples
+
+- [Particle sample](https://github.com/Particle-Network/particle-cyber-sample)
+
 ## Supported Chains
 
 - Optimism / Optimism Goerli
