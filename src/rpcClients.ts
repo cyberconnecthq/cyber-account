@@ -1,24 +1,68 @@
+import { Chain, createPublicClient, http, type PublicClient } from "viem";
 import {
-  createPublicClient,
-  http,
-  type PublicClient,
-  type WalletClient,
-  createWalletClient,
-  custom,
-  Chain,
-} from "viem";
-import {
-  optimismGoerli,
-  optimism,
-  polygonMumbai,
-  polygon,
+  arbitrum,
+  arbitrumGoerli,
   base,
   baseGoerli,
-  lineaTestnet,
+  bsc,
+  bscTestnet,
   linea,
-  arbitrumGoerli,
-  arbitrum,
+  lineaTestnet,
+  optimism,
+  optimismGoerli,
+  polygon,
+  polygonMumbai,
 } from "viem/chains";
+
+export const opBnbMainnet = {
+  id: 204,
+  name: "opBNB",
+  network: "opBNB",
+  rpcUrls: {
+    public: {
+      http: [
+        "https://opbnb-mainnet.nodereal.io/v1/64a9df0874fb4a93b9d0a3849de012d3",
+      ],
+    },
+    default: {
+      http: [
+        `https://opbnb-mainnet.nodereal.io/v1/64a9df0874fb4a93b9d0a3849de012d3`,
+      ],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: "BlockScout",
+      url: "https://opbnbscan.com",
+    },
+  },
+  nativeCurrency: bsc.nativeCurrency,
+};
+
+export const opBnbTestnet = {
+  id: 5611,
+  name: "opBNB Testnet",
+  network: "opBNB testnet",
+  rpcUrls: {
+    public: {
+      http: [
+        "https://opbnb-testnet.nodereal.io/v1/64a9df0874fb4a93b9d0a3849de012d3",
+      ],
+    },
+    default: {
+      http: [
+        `https://opbnb-testnet.nodereal.io/v1/64a9df0874fb4a93b9d0a3849de012d3`,
+      ],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: "BlockScout",
+      url: "https://testnet.opbnbscan.com",
+    },
+  },
+  nativeCurrency: bscTestnet.nativeCurrency,
+};
 
 const testnetChains = [
   optimismGoerli,
@@ -26,8 +70,9 @@ const testnetChains = [
   baseGoerli,
   lineaTestnet,
   arbitrumGoerli,
+  opBnbTestnet,
 ];
-const mainnetChains = [optimism, polygon, base, linea, arbitrum];
+const mainnetChains = [optimism, polygon, base, linea, arbitrum, opBnbMainnet];
 
 const supportedChains: Chain[] = [...testnetChains, ...mainnetChains];
 
