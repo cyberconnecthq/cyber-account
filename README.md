@@ -12,6 +12,8 @@ CyberAccount SDK is the official NPM package that implements CyberConnect V3 acc
 - Polygon / Polygon Mumbai
 - Base / Base Goerli
 - Linea / Linea Goerli
+- Arbitrum / Arbitrum Goerli
+- opBNB / opBNB Goerli
 
 ## Installation
 
