@@ -33,6 +33,7 @@ export type TransactionData = UserOperationCallData & {
 };
 
 export type UserOperationCallData = {
+  from?: Address;
   to: Address;
   data: Hex;
   value?: bigint;

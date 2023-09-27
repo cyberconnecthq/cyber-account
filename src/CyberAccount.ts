@@ -144,9 +144,8 @@ class CyberAccount {
 
   private async getDraftedUserOperation(
     transactionData: TransactionData,
-    senderAddress?: Address,
   ): Promise<UserOperation> {
-    const sender = senderAddress || this.address;
+    const sender = transactionData.from || this.address;
     const values = await Promise.all([
       this.getUserOperationNonce(),
       this.getAccountInitCode(),
@@ -300,40 +299,28 @@ class CyberAccount {
 
   public async estimateTransaction(
     transactionData: TransactionData,
-    {
-      disablePaymaster = false,
-      senderAddress,
-    }: { disablePaymaster?: boolean; senderAddress?: Address } = {},
+    { disablePaymaster = false }: { disablePaymaster?: boolean } = {},
   ): Promise<EstimateUserOperationReturn | Estimation | undefined> {
     if (this.paymaster && !disablePaymaster) {
-      return await this.estimateTransactionWithPaymaster(
-        transactionData,
-        senderAddress,
-      );
+      return await this.estimateTransactionWithPaymaster(transactionData);
     }
 
-    return await this.estimateTransactionWithoutPaymaster(
-      transactionData,
-      senderAddress,
-    );
+    return await this.estimateTransactionWithoutPaymaster(transactionData);
   }
 
   public async estimateTransactionWithPaymaster(
     transactionData: TransactionData,
-    senderAddress?: Address,
   ): Promise<EstimateUserOperationReturn | undefined> {
-    const sender = senderAddress || this.address;
     const nonce = null;
 
-    const { to, value, data } = transactionData;
-
+    const { from, to, value, data } = transactionData;
     if (to === undefined || value === undefined || data === undefined) {
       throw new Error("{to, value and data} must not be undefined.");
     }
 
     const estimation = await this.paymaster?.estimateUserOperation(
       {
-        sender,
+        sender: from || this.address,
         to: transactionData.to,
         value: value.toString(),
         callData: data,
@@ -349,12 +336,9 @@ class CyberAccount {
 
   public async estimateTransactionWithoutPaymaster(
     transactionData: TransactionData,
-    senderAddress?: Address,
   ): Promise<Estimation | undefined> {
-    let draftedUserOperation = await this.getDraftedUserOperation(
-      transactionData,
-      senderAddress,
-    );
+    let draftedUserOperation =
+      await this.getDraftedUserOperation(transactionData);
 
     const estimatedGasValues = await this.bundler.estimateUserOperationGas(
       draftedUserOperation,
