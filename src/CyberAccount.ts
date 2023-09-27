@@ -60,7 +60,7 @@ class CyberAccount {
   }
 
   private getRpcClient(
-    chain: Partial<Chain> & { id: Chain["id"]; rpcUrl?: string }
+    chain: Partial<Chain> & { id: Chain["id"]; rpcUrl?: string },
   ): PublicClient {
     const publicClient = publicClients[chain.id];
 
@@ -133,7 +133,7 @@ class CyberAccount {
 
   public async sendTransaction(
     transactionData: TransactionData,
-    { disablePaymaster = false }: { disablePaymaster?: boolean } = {}
+    { disablePaymaster = false }: { disablePaymaster?: boolean } = {},
   ): Promise<Hash | undefined> {
     if (this.paymaster && !disablePaymaster) {
       return await this.sendTransactionWithPaymaster(transactionData);
@@ -143,10 +143,9 @@ class CyberAccount {
   }
 
   private async getDraftedUserOperation(
-    transactionData: TransactionData
+    transactionData: TransactionData,
   ): Promise<UserOperation> {
-    const sender = this.address;
-
+    const sender = transactionData.from || this.address;
     const values = await Promise.all([
       this.getUserOperationNonce(),
       this.getAccountInitCode(),
@@ -164,9 +163,8 @@ class CyberAccount {
     const signature =
       "0x00000000870fe151d548a1c527c3804866fab30abf28ed17b79d5fc5149f19ca0819fefc3c57f3da4fdf9b10fab3f2f3dca536467ae44943b9dbb8433efe7760ddd72aaa1c";
 
-    const { maxFeePerGas, maxPriorityFeePerGas } = await this.calculateGasFees(
-      transactionData
-    );
+    const { maxFeePerGas, maxPriorityFeePerGas } =
+      await this.calculateGasFees(transactionData);
 
     return {
       sender,
@@ -184,16 +182,15 @@ class CyberAccount {
   }
 
   public async sendTransactionWithoutPaymaster(
-    transactionData: TransactionData
+    transactionData: TransactionData,
   ): Promise<Hash | undefined> {
-    let draftedUserOperation = await this.getDraftedUserOperation(
-      transactionData
-    );
+    let draftedUserOperation =
+      await this.getDraftedUserOperation(transactionData);
 
     const estimatedGasValues = await this.bundler.estimateUserOperationGas(
       draftedUserOperation,
       CyberBundler.entryPointAddress,
-      this.chain.id
+      this.chain.id,
     );
 
     draftedUserOperation = { ...draftedUserOperation, ...estimatedGasValues };
@@ -215,20 +212,20 @@ class CyberAccount {
     return await this.bundler.sendUserOperation(
       signedUserOperation,
       CyberBundler.entryPointAddress,
-      this.chain.id
+      this.chain.id,
     );
   }
 
   public async sendTransactionWithPaymaster(
-    transactionData: TransactionData
+    transactionData: TransactionData,
   ): Promise<Hash | undefined> {
-    const sender = this.address;
     const nonce = null;
 
     let maxFeePerGas: Hex = "0x0";
     let maxPriorityFeePerGas: Hex = "0x0";
 
-    const { to, value, data } = transactionData;
+    const { from, to, value, data } = transactionData;
+    const sender = from || this.address;
 
     if (to === undefined || value === undefined || data === undefined) {
       throw new Error("{to, value and data} must not be undefined");
@@ -249,7 +246,7 @@ class CyberAccount {
         },
 
         { owner: this.owner.address },
-        this.chain.id
+        this.chain.id,
       );
 
       maxFeePerGas = estimation?.maxFeePerGas || maxFeePerGas;
@@ -269,18 +266,18 @@ class CyberAccount {
         ep: CyberBundler.entryPointAddress,
       },
       { owner: this.owner.address },
-      this.chain.id
+      this.chain.id,
     );
 
     let rawSignature: Hex;
     try {
       rawSignature = await this.owner.signMessage(
-        sponsoredResult.userOperationHash
+        sponsoredResult.userOperationHash,
       );
     } catch (e: unknown) {
       await this.paymaster?.rejectUserOperation(
         sponsoredResult.userOperationHash,
-        this.chain.id
+        this.chain.id,
       );
 
       throw e;
@@ -296,13 +293,13 @@ class CyberAccount {
     return await this.bundler.sendUserOperation(
       signedUserOperation,
       CyberBundler.entryPointAddress,
-      this.chain.id
+      this.chain.id,
     );
   }
 
   public async estimateTransaction(
     transactionData: TransactionData,
-    { disablePaymaster = false }: { disablePaymaster?: boolean } = {}
+    { disablePaymaster = false }: { disablePaymaster?: boolean } = {},
   ): Promise<EstimateUserOperationReturn | Estimation | undefined> {
     if (this.paymaster && !disablePaymaster) {
       return await this.estimateTransactionWithPaymaster(transactionData);
@@ -312,20 +309,18 @@ class CyberAccount {
   }
 
   public async estimateTransactionWithPaymaster(
-    transactionData: TransactionData
+    transactionData: TransactionData,
   ): Promise<EstimateUserOperationReturn | undefined> {
-    const sender = this.address;
     const nonce = null;
 
-    const { to, value, data } = transactionData;
-
+    const { from, to, value, data } = transactionData;
     if (to === undefined || value === undefined || data === undefined) {
       throw new Error("{to, value and data} must not be undefined.");
     }
 
     const estimation = await this.paymaster?.estimateUserOperation(
       {
-        sender,
+        sender: from || this.address,
         to: transactionData.to,
         value: value.toString(),
         callData: data,
@@ -333,23 +328,22 @@ class CyberAccount {
         ep: CyberBundler.entryPointAddress,
       },
       { owner: this.owner.address },
-      this.chain.id
+      this.chain.id,
     );
 
     return estimation;
   }
 
   public async estimateTransactionWithoutPaymaster(
-    transactionData: TransactionData
+    transactionData: TransactionData,
   ): Promise<Estimation | undefined> {
-    let draftedUserOperation = await this.getDraftedUserOperation(
-      transactionData
-    );
+    let draftedUserOperation =
+      await this.getDraftedUserOperation(transactionData);
 
     const estimatedGasValues = await this.bundler.estimateUserOperationGas(
       draftedUserOperation,
       CyberBundler.entryPointAddress,
-      this.chain.id
+      this.chain.id,
     );
 
     return estimatedGasValues;
@@ -371,7 +365,7 @@ class CyberAccount {
     const maxPriorityFeePerGasOnChain = hexToBigInt(
       await this.publicClient.request({
         method: "eth_maxPriorityFeePerGas",
-      })
+      }),
     );
 
     const maxPriorityFeePerGasWithBuffer =
@@ -419,7 +413,7 @@ class CyberAccount {
 
     const packed = encodeAbiParameters(
       parseAbiParameters(
-        "address, uint256, bytes32, bytes32, uint256, uint256, uint256, uint256, uint256, bytes32"
+        "address, uint256, bytes32, bytes32, uint256, uint256, uint256, uint256, uint256, bytes32",
       ),
       [
         sender,
@@ -432,12 +426,16 @@ class CyberAccount {
         hexToBigInt(maxFeePerGas),
         hexToBigInt(maxPriorityFeePerGas),
         keccak256(paymasterAndData),
-      ]
+      ],
     );
 
     const encoded = encodeAbiParameters(
       parseAbiParameters("bytes32, address, uint256"),
-      [keccak256(packed), CyberBundler.entryPointAddress, BigInt(this.chain.id)]
+      [
+        keccak256(packed),
+        CyberBundler.entryPointAddress,
+        BigInt(this.chain.id),
+      ],
     );
 
     return keccak256(encoded);

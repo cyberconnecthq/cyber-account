@@ -86,7 +86,7 @@ const publicClients: Record<string, (url?: string) => PublicClient> =
         }),
       ...clients,
     }),
-    {}
+    {},
   );
 
 export { publicClients, supportedChains };

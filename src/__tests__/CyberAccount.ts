@@ -43,7 +43,7 @@ describe("CyberAccount", () => {
     });
 
     expect(cyberAccount.hashUserOperation(userOperation)).toEqual(
-      userOperationHash
+      userOperationHash,
     );
   });
 });
