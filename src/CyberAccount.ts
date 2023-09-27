@@ -219,13 +219,13 @@ class CyberAccount {
   public async sendTransactionWithPaymaster(
     transactionData: TransactionData,
   ): Promise<Hash | undefined> {
-    const sender = this.address;
     const nonce = null;
 
     let maxFeePerGas: Hex = "0x0";
     let maxPriorityFeePerGas: Hex = "0x0";
 
-    const { to, value, data } = transactionData;
+    const { from, to, value, data } = transactionData;
+    const sender = from || this.address;
 
     if (to === undefined || value === undefined || data === undefined) {
       throw new Error("{to, value and data} must not be undefined");
