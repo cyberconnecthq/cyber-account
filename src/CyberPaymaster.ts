@@ -90,7 +90,7 @@ class CyberPaymaster {
               method: "POST",
               body: JSON.stringify(requestBody),
               headers: auth,
-            }
+            },
           );
 
           const res = await response.json();
@@ -116,7 +116,7 @@ class CyberPaymaster {
       },
       async estimateUserOperation(
         data: EstimatedPaymasterData,
-        context: PaymasterContext
+        context: PaymasterContext,
       ) {
         return client.request({
           method: "cc_estimateUserOperation",
@@ -125,7 +125,7 @@ class CyberPaymaster {
       },
       async sponsorUserOperation(
         data: SponsoredPaymasterData,
-        context: PaymasterContext
+        context: PaymasterContext,
       ) {
         return client.request({
           method: "cc_sponsorUserOperation",
@@ -160,7 +160,7 @@ class CyberPaymaster {
   async estimateUserOperation(
     data: EstimatedPaymasterData,
     context: PaymasterContext,
-    chainId: number
+    chainId: number,
   ) {
     return this.clients[chainId]?.estimateUserOperation(data, context);
   }
@@ -168,7 +168,7 @@ class CyberPaymaster {
   async sponsorUserOperation(
     data: SponsoredPaymasterData,
     context: PaymasterContext,
-    chainId: number
+    chainId: number,
   ) {
     return this.clients[chainId]?.sponsorUserOperation(data, context);
   }

@@ -23,7 +23,7 @@ class CyberBundler {
     }).extend(() => ({
       async sendUserOperation(
         userOperation: UserOperation,
-        entryPointAddress: Address
+        entryPointAddress: Address,
       ) {
         return client.request({
           method: "eth_sendUserOperation",
@@ -32,7 +32,7 @@ class CyberBundler {
       },
       async estimateUserOperationGas(
         userOperation: UserOperation,
-        entryPointAddress: Address
+        entryPointAddress: Address,
       ) {
         return (client as BundlerClient).request({
           method: "eth_estimateUserOperationGas",
@@ -75,22 +75,22 @@ class CyberBundler {
   public async sendUserOperation(
     userOperation: UserOperation,
     entryPointAddress: Address,
-    chainId: number
+    chainId: number,
   ) {
     return this.clients[chainId]?.sendUserOperation(
       userOperation,
-      entryPointAddress
+      entryPointAddress,
     );
   }
 
   public async estimateUserOperationGas(
     userOperation: UserOperation,
     entryPointAddress: Address,
-    chainId: number
+    chainId: number,
   ) {
     return this.clients[chainId]?.estimateUserOperationGas(
       userOperation,
-      entryPointAddress
+      entryPointAddress,
     );
   }
 

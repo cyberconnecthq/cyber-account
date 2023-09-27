@@ -74,7 +74,7 @@ export type BundlerRpcRequests = [
     Method: "eth_supportedEntryPoints";
     Parameters: [];
     ReturnType: Address[];
-  }
+  },
 ];
 
 export type UserOperationReceipt = {
@@ -100,11 +100,11 @@ export type Estimation = {
 export type BundlerActions = {
   estimateUserOperationGas: (
     userOperation: UserOperation,
-    entryPoint: Address
+    entryPoint: Address,
   ) => Promise<Estimation>;
   sendUserOperation: (
     userOperation: UserOperation,
-    entryPoint: Address
+    entryPoint: Address,
   ) => Promise<Hash>;
   getUserOperationByHash: (hash: Hash) => Promise<OnChainUserOperation | null>;
   getUserOperationReceipt: (hash: Hash) => Promise<UserOperationReceipt | null>;
@@ -204,22 +204,22 @@ export type PaymasterRpcRequests = [
     Method: "cc_listPendingUserOperations";
     Parameters: [Address];
     ReturnType: { userOperations: PendingUserOperation[] };
-  }
+  },
 ];
 
 export type PaymasterActions = {
   getUserCredit: (address: Address) => Promise<Hex>;
   estimateUserOperation: (
     data: EstimatedPaymasterData,
-    context: PaymasterContext
+    context: PaymasterContext,
   ) => Promise<EstimateUserOperationReturn>;
   sponsorUserOperation: (
     data: SponsoredPaymasterData,
-    context: PaymasterContext
+    context: PaymasterContext,
   ) => Promise<SponsorUserOperationReturn>;
   rejectUserOperation: (hash: Hash) => Promise<{ success: boolean }>;
   listPendingUserOperations: (
-    address: Address
+    address: Address,
   ) => Promise<{ userOperations: PendingUserOperation[] }>;
 };
 
