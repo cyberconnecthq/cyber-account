@@ -188,7 +188,7 @@ class CyberAccount {
       await this.getDraftedUserOperation(transactionData);
 
     const estimatedGasValues = await this.bundler.estimateUserOperationGas(
-      draftedUserOperation,
+      { ...draftedUserOperation, paymasterAndData: "0x" as Hex },
       CyberBundler.entryPointAddress,
       this.chain.id,
     );
