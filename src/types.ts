@@ -232,7 +232,8 @@ export type PaymasterClient<T extends Transport = HttpTransport> = Client<
   PaymasterActions
 >;
 
-export type OnChainUserOperation = UserOperation & {
+export type OnChainUserOperation = {
+  userOperation: UserOperation;
   blockHash: Hash;
   blockNumber: Hex;
   entryPoint: Address;
