@@ -12,6 +12,7 @@ import {
   optimismGoerli,
   polygon,
   polygonMumbai,
+  scrollSepolia,
 } from "viem/chains";
 
 export const opBnbMainnet = {
@@ -71,6 +72,7 @@ const testnetChains = [
   lineaTestnet,
   arbitrumGoerli,
   opBnbTestnet,
+  scrollSepolia,
 ];
 const mainnetChains = [optimism, polygon, base, linea, arbitrum, opBnbMainnet];
 
