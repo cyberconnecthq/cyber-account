@@ -37,7 +37,7 @@ class CyberPaymaster {
   public publicClients: Record<number, PublicClient>;
   public cyberAccounts: Record<number, CyberAccount>;
   static testnetTokenReceiverAddress: Address =
-    "0x52b90f8e69ac72fe0f46726eadda13835cbb01fa";
+    "0xcd97405fb58e94954e825e46db192b916a45d412";
   static mainnetTokenReceiverAddress: Address =
     "0xcd97405fb58e94954e825e46db192b916a45d412";
 

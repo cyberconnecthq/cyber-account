@@ -25,10 +25,10 @@ class CyberFactory {
   };
 
   static testnetContractAddresses: Record<string, Address> = {
-    factory: "0x70efb7410922159dd482cd848fb4a7e8c266f95c",
-    validator: "0x1a062d6105612570e86cba4ed43da69371ea4755",
-    kernelTemplate: "0x614A74A0B21ce143A2162f04a80eb8B662b98b10",
-    nextTemplate: "0x4040829371968BB87fbA4e3578236F0ba22e4C04",
+    factory: "0xaee9762ce625e0a8f7b184670fb57c37bfe1d0f1",
+    validator: "0x417f5a41305ddc99d18b5e176521b468b2a31b86",
+    kernelTemplate: "0x19f4147568D76B8a68b3755589eCd09A6B97acB7",
+    nextTemplate: "0x7939a966331af83551C2b1F8753Cd1aa76C85F5c",
   };
 
   static mainnetContractAddresses: Record<string, Address> = {
