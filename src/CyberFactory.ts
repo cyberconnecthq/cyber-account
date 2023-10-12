@@ -24,6 +24,7 @@ class CyberFactory {
     sudo: "0x00000000",
   };
 
+  // Testnet contract addresses are same as mainnet.
   static testnetContractAddresses: Record<string, Address> = {
     factory: "0xaee9762ce625e0a8f7b184670fb57c37bfe1d0f1",
     validator: "0x417f5a41305ddc99d18b5e176521b468b2a31b86",
