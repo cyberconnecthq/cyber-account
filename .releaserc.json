@@ -3,7 +3,7 @@
     "main",
     {
       "name": "beta",
-      "prelease": true
+      "prerelease": true
     }
   ]
 }
