@@ -12,6 +12,9 @@ import {
   keccak256,
   toHex,
   hexToBigInt,
+  toBytes,
+  fromBytes,
+  encodePacked,
 } from "viem";
 import CyberFactory from "./CyberFactory";
 import CyberBundler from "./CyberBundler";
@@ -23,9 +26,10 @@ import {
   type CyberAccountOwner,
   type TransactionData,
   type EstimateUserOperationReturn,
+  type UserOperationCallDataWithDelegate,
   Estimation,
 } from "./types";
-import { EntryPointAbi, KernelAccountAbi } from "./ABIs";
+import { EntryPointAbi, KernelAccountAbi, MultiSendAbi } from "./ABIs";
 
 interface CyberAccountParams {
   owner: CyberAccountOwner;
@@ -44,6 +48,8 @@ class CyberAccount {
   public isDeployed?: boolean;
   private initCode?: Hex;
   public paymaster?: CyberPaymaster;
+
+  static MULTI_SEND_ADDRESS: Hex = "0x8ae01fCF7c655655fF2c6Ef907b8B4718Ab4e17c";
 
   constructor(params: CyberAccountParams) {
     const { chain, owner, bundler, paymaster } = params;
@@ -117,7 +123,10 @@ class CyberAccount {
     return { functionName, args };
   }
 
-  private encodeExecuteCallData(callData: UserOperationCallData) {
+  private encodeExecuteCallData(
+    callData: UserOperationCallData,
+    opCode: number = 0,
+  ) {
     const { to, value, data } = callData;
 
     if (!to || !data) {
@@ -127,8 +136,43 @@ class CyberAccount {
     return encodeFunctionData({
       abi: KernelAccountAbi,
       functionName: "execute",
-      args: [to, value || BigInt(0), data, 0],
+      args: [to, value || BigInt(0), data, opCode],
     });
+  }
+
+  public encodeBatchExecuteCallData(batch: UserOperationCallData[]) {
+    const multiSendCallData = encodeFunctionData({
+      abi: MultiSendAbi,
+      functionName: "multiSend",
+      args: [this.encodeMultiSendCallData(batch)],
+    });
+
+    return this.encodeExecuteCallData(
+      {
+        to: CyberAccount.MULTI_SEND_ADDRESS,
+        data: multiSendCallData,
+      },
+      1,
+    );
+  }
+
+  private encodeMultiSendCallData(batch: UserOperationCallData[]) {
+    return ("0x" + batch.map((tx) => this.encodeCall(tx)).join("")) as Hex;
+  }
+
+  private encodeCall(callData: UserOperationCallDataWithDelegate) {
+    const data = toBytes(callData.data);
+    const encoded = encodePacked(
+      ["uint8", "address", "uint256", "uint256", "bytes"],
+      [
+        0, // nested delegate call 0 - false, 1 - true
+        callData.to,
+        callData.value || BigInt(0),
+        BigInt(data.length),
+        fromBytes(data, "hex"),
+      ],
+    );
+    return encoded.slice(2);
   }
 
   public async sendTransaction(
@@ -145,7 +189,14 @@ class CyberAccount {
   private async getDraftedUserOperation(
     transactionData: TransactionData,
   ): Promise<UserOperation> {
-    const sender = transactionData.from || this.address;
+    let sender: Address;
+
+    if (Array.isArray(transactionData)) {
+      sender = this.address;
+    } else {
+      sender = transactionData.from || this.address;
+    }
+
     const values = await Promise.all([
       this.getUserOperationNonce(),
       this.getAccountInitCode(),
@@ -154,7 +205,10 @@ class CyberAccount {
     const nonce = toHex(values[0]);
     const initCode = values[1];
 
-    const callData = this.encodeExecuteCallData(transactionData);
+    const callData = Array.isArray(transactionData)
+      ? this.encodeBatchExecuteCallData(transactionData)
+      : this.encodeExecuteCallData(transactionData);
+
     const callGasLimit = "0x0";
     const verificationGasLimit = "0x0";
     const preVerificationGas = "0x0";
@@ -163,8 +217,11 @@ class CyberAccount {
     const signature =
       "0x00000000870fe151d548a1c527c3804866fab30abf28ed17b79d5fc5149f19ca0819fefc3c57f3da4fdf9b10fab3f2f3dca536467ae44943b9dbb8433efe7760ddd72aaa1c";
 
-    const { maxFeePerGas, maxPriorityFeePerGas } =
-      await this.calculateGasFees(transactionData);
+    const { maxFeePerGas, maxPriorityFeePerGas } = Array.isArray(
+      transactionData,
+    )
+      ? await this.calculateGasFees()
+      : await this.calculateGasFees(transactionData);
 
     return {
       sender,
@@ -219,6 +276,10 @@ class CyberAccount {
   public async sendTransactionWithPaymaster(
     transactionData: TransactionData,
   ): Promise<Hash | undefined> {
+    if (Array.isArray(transactionData)) {
+      return await this.sendBatchTransactionWithPaymaster(transactionData);
+    }
+
     const nonce = null;
 
     let maxFeePerGas: Hex = "0x0";
@@ -243,6 +304,7 @@ class CyberAccount {
           callData: data,
           nonce: nonce,
           ep: CyberBundler.entryPointAddress,
+          operation: 0,
         },
 
         { owner: this.owner.address },
@@ -264,6 +326,110 @@ class CyberAccount {
         maxPriorityFeePerGas: maxPriorityFeePerGas,
         nonce: nonce,
         ep: CyberBundler.entryPointAddress,
+        operation: 0,
+      },
+      { owner: this.owner.address },
+      this.chain.id,
+    );
+
+    let rawSignature: Hex;
+    try {
+      rawSignature = await this.owner.signMessage(
+        sponsoredResult.userOperationHash,
+      );
+    } catch (e: unknown) {
+      await this.paymaster?.rejectUserOperation(
+        sponsoredResult.userOperationHash,
+        this.chain.id,
+      );
+
+      throw e;
+    }
+
+    const ecdsaSignature = this.addValidatorToSignature(rawSignature);
+
+    const signedUserOperation = {
+      ...sponsoredResult.userOperation,
+      signature: ecdsaSignature,
+    };
+
+    return await this.bundler.sendUserOperation(
+      signedUserOperation,
+      CyberBundler.entryPointAddress,
+      this.chain.id,
+    );
+  }
+
+  private sumBatchTxValues(transactionData: TransactionData) {
+    if (!Array.isArray(transactionData)) {
+      return transactionData.value || 0n;
+    }
+
+    return transactionData.reduce(
+      (acc, tx) => acc + (tx.value || 0n),
+      BigInt(0),
+    );
+  }
+
+  private encodeMultiSendFunctionData(transactionData: TransactionData) {
+    if (!Array.isArray(transactionData)) {
+      return "0x";
+    }
+
+    return encodeFunctionData({
+      abi: MultiSendAbi,
+      functionName: "multiSend",
+      args: [this.encodeMultiSendCallData(transactionData)],
+    });
+  }
+
+  public async sendBatchTransactionWithPaymaster(
+    transactionData: TransactionData,
+  ): Promise<Hash | undefined> {
+    if (!Array.isArray(transactionData)) {
+      return;
+    }
+
+    const nonce = null;
+    const sender = this.address;
+    const value = this.sumBatchTxValues(transactionData).toString();
+    const callData = this.encodeMultiSendFunctionData(transactionData);
+    const operation = 1;
+    const to = CyberAccount.MULTI_SEND_ADDRESS;
+    const ep = CyberBundler.entryPointAddress;
+
+    let maxFeePerGas: Hex = "0x0";
+    let maxPriorityFeePerGas: Hex = "0x0";
+
+    const estimation = await this.paymaster!.estimateUserOperation(
+      {
+        sender,
+        to,
+        value,
+        callData,
+        nonce,
+        ep,
+        operation,
+      },
+      { owner: this.owner.address },
+      this.chain.id,
+    );
+
+    maxFeePerGas = estimation?.maxFeePerGas || maxFeePerGas;
+    maxPriorityFeePerGas =
+      estimation?.maxPriorityFeePerGas || maxPriorityFeePerGas;
+
+    const sponsoredResult = await this.paymaster!.sponsorUserOperation(
+      {
+        sender,
+        to,
+        value,
+        callData,
+        maxFeePerGas,
+        maxPriorityFeePerGas,
+        nonce,
+        ep,
+        operation,
       },
       { owner: this.owner.address },
       this.chain.id,
@@ -311,6 +477,10 @@ class CyberAccount {
   public async estimateTransactionWithPaymaster(
     transactionData: TransactionData,
   ): Promise<EstimateUserOperationReturn | undefined> {
+    if (Array.isArray(transactionData)) {
+      return await this.estimateBatchTransactionWithPaymaster(transactionData);
+    }
+
     const nonce = null;
 
     const { from, to, value, data } = transactionData;
@@ -326,6 +496,37 @@ class CyberAccount {
         callData: data,
         nonce: nonce,
         ep: CyberBundler.entryPointAddress,
+        operation: 0,
+      },
+      { owner: this.owner.address },
+      this.chain.id,
+    );
+
+    return estimation;
+  }
+
+  public async estimateBatchTransactionWithPaymaster(
+    transactionData: TransactionData,
+  ): Promise<EstimateUserOperationReturn | undefined> {
+    if (!Array.isArray(transactionData)) {
+      return;
+    }
+
+    const nonce = null;
+    const sender = this.address;
+    const to = CyberAccount.MULTI_SEND_ADDRESS;
+    const value = this.sumBatchTxValues(transactionData).toString();
+    const callData = this.encodeBatchExecuteCallData(transactionData);
+
+    const estimation = await this.paymaster?.estimateUserOperation(
+      {
+        sender,
+        to: to,
+        value,
+        callData,
+        nonce,
+        ep: CyberBundler.entryPointAddress,
+        operation: 1,
       },
       { owner: this.owner.address },
       this.chain.id,

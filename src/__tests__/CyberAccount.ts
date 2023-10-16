@@ -1,7 +1,7 @@
 import CyberAccount from "../CyberAccount";
 import CyberBundler from "../CyberBundler";
 import { optimismGoerli, polygonMumbai } from "viem/chains";
-import { type UserOperation } from "../types";
+import { type UserOperation, type UserOperationCallData } from "../types";
 import { type Hex } from "viem";
 
 describe("CyberAccount", () => {
@@ -46,4 +46,39 @@ describe("CyberAccount", () => {
       userOperationHash,
     );
   });
+
+  // it("returns the right encoded multi-transaction", () => {
+  //   const data = [
+  //     {
+  //       to: "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+  //       data: "0xdeadbeef",
+  //     },
+  //     {
+  //       to: "0x8ba1f109551bd432803012645ac136ddd64dba72",
+  //       data: "0xcafebabe",
+  //     },
+  //   ] satisfies UserOperationCallData[];
+  //
+  //   const encoded =
+  //     "0x18dfb3c7000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000002000000000000000000000000deadbeefdeadbeefdeadbeefdeadbeefdeadbeef0000000000000000000000008ba1f109551bd432803012645ac136ddd64dba720000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000004deadbeef000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004cafebabe00000000000000000000000000000000000000000000000000000000";
+  //
+  //   const ownerAddress = "0x370CA01D7314e3EEa59d57E343323bB7e9De24C6";
+  //   const cyberBundler = new CyberBundler({
+  //     rpcUrl: "https://api.stg.cyberconnect.dev/cyberaccount/bundler/v1/rpc",
+  //     appId: "ab23459a-32d7-4235-8129-77bd5de27fb1",
+  //   });
+  //
+  //   const cyberAccount = new CyberAccount({
+  //     owner: {
+  //       address: ownerAddress,
+  //       signMessage: async (message) => {
+  //         return ("0x" + message) as Hex;
+  //       },
+  //     },
+  //     chain: polygonMumbai,
+  //     bundler: cyberBundler,
+  //   });
+  //
+  //   expect(cyberAccount.encodeBatchExecuteCallData(data)).toEqual(encoded);
+  // });
 });
