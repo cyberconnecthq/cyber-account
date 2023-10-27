@@ -13,6 +13,9 @@ import {
   polygon,
   polygonMumbai,
   scrollSepolia,
+  scroll,
+  mainnet,
+  goerli,
 } from "viem/chains";
 
 export const opBnbMainnet = {
@@ -73,8 +76,18 @@ const testnetChains = [
   arbitrumGoerli,
   opBnbTestnet,
   scrollSepolia,
+  goerli,
 ];
-const mainnetChains = [optimism, polygon, base, linea, arbitrum, opBnbMainnet];
+const mainnetChains = [
+  optimism,
+  polygon,
+  base,
+  linea,
+  arbitrum,
+  opBnbMainnet,
+  mainnet,
+  scroll,
+];
 
 const supportedChains: Chain[] = [...testnetChains, ...mainnetChains];
 
