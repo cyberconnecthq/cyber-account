@@ -27,16 +27,27 @@ export type UserOperation = {
   signature: Hex;
 };
 
-export type TransactionData = UserOperationCallData & {
-  maxFeePerGas?: bigint;
-  maxPriorityFeePerGas?: bigint;
-};
+export type TransactionData =
+  | (UserOperationCallData & {
+      maxFeePerGas?: bigint;
+      maxPriorityFeePerGas?: bigint;
+    })
+  | Array<
+      UserOperationCallData & {
+        maxFeePerGas?: bigint;
+        maxPriorityFeePerGas?: bigint;
+      }
+    >;
 
 export type UserOperationCallData = {
   from?: Address;
   to: Address;
   data: Hex;
   value?: bigint;
+};
+
+export type UserOperationCallDataWithDelegate = UserOperationCallData & {
+  delegateCall?: boolean;
 };
 
 export type CyberAccountOwner = {
@@ -127,6 +138,7 @@ export interface EstimatedPaymasterData {
   value: string;
   nonce: Hex | null;
   ep: Address;
+  operation: 0 | 1; // 0 = call, 1 = delegate call
 }
 
 export interface SponsoredPaymasterData {
@@ -138,6 +150,7 @@ export interface SponsoredPaymasterData {
   ep: Address;
   maxFeePerGas?: Hex | null;
   maxPriorityFeePerGas?: Hex | null;
+  operation: 0 | 1; // 0 = call, 1 = delegate call
 }
 
 export type PaymasterContext = {
