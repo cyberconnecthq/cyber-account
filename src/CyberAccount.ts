@@ -177,10 +177,16 @@ class CyberAccount {
 
   public async sendTransaction(
     transactionData: TransactionData,
-    { disablePaymaster = false }: { disablePaymaster?: boolean } = {},
+    {
+      disablePaymaster = false,
+      sponsorSig = "",
+    }: { disablePaymaster?: boolean; sponsorSig?: string } = {},
   ): Promise<Hash | undefined> {
     if (this.paymaster && !disablePaymaster) {
-      return await this.sendTransactionWithPaymaster(transactionData);
+      return await this.sendTransactionWithPaymaster(
+        transactionData,
+        sponsorSig,
+      );
     }
 
     return await this.sendTransactionWithoutPaymaster(transactionData);
