@@ -275,6 +275,7 @@ class CyberAccount {
 
   public async sendTransactionWithPaymaster(
     transactionData: TransactionData,
+    sponsorSig?: string,
   ): Promise<Hash | undefined> {
     if (Array.isArray(transactionData)) {
       return await this.sendBatchTransactionWithPaymaster(transactionData);
@@ -306,8 +307,10 @@ class CyberAccount {
           ep: CyberBundler.entryPointAddress,
           operation: 0,
         },
-
-        { owner: this.owner.address },
+        {
+          owner: this.owner.address,
+          sponsorSig: sponsorSig || "",
+        },
         this.chain.id,
       );
 
@@ -385,6 +388,7 @@ class CyberAccount {
 
   public async sendBatchTransactionWithPaymaster(
     transactionData: TransactionData,
+    sponsorSig?: string,
   ): Promise<Hash | undefined> {
     if (!Array.isArray(transactionData)) {
       return;
@@ -431,7 +435,10 @@ class CyberAccount {
         ep,
         operation,
       },
-      { owner: this.owner.address },
+      {
+        owner: this.owner.address,
+        sponsorSig: sponsorSig || "",
+      },
       this.chain.id,
     );
 
@@ -476,9 +483,13 @@ class CyberAccount {
 
   public async estimateTransactionWithPaymaster(
     transactionData: TransactionData,
+    sponsorSig?: string,
   ): Promise<EstimateUserOperationReturn | undefined> {
     if (Array.isArray(transactionData)) {
-      return await this.estimateBatchTransactionWithPaymaster(transactionData);
+      return await this.estimateBatchTransactionWithPaymaster(
+        transactionData,
+        sponsorSig,
+      );
     }
 
     const nonce = null;
@@ -507,6 +518,7 @@ class CyberAccount {
 
   public async estimateBatchTransactionWithPaymaster(
     transactionData: TransactionData,
+    sponsorSig?: string,
   ): Promise<EstimateUserOperationReturn | undefined> {
     if (!Array.isArray(transactionData)) {
       return;
@@ -528,7 +540,10 @@ class CyberAccount {
         ep: CyberBundler.entryPointAddress,
         operation: 1,
       },
-      { owner: this.owner.address },
+      {
+        owner: this.owner.address,
+        sponsorSig: sponsorSig || "",
+      },
       this.chain.id,
     );
 

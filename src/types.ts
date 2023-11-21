@@ -155,6 +155,7 @@ export interface SponsoredPaymasterData {
 
 export type PaymasterContext = {
   owner: Address;
+  sponsorSig?: string;
 };
 
 export type EstimateUserOperationReturn = {
