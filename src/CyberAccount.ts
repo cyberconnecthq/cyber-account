@@ -177,10 +177,16 @@ class CyberAccount {
 
   public async sendTransaction(
     transactionData: TransactionData,
-    { disablePaymaster = false }: { disablePaymaster?: boolean } = {},
+    {
+      disablePaymaster = false,
+      sponsorSig = "",
+    }: { disablePaymaster?: boolean; sponsorSig?: string } = {},
   ): Promise<Hash | undefined> {
     if (this.paymaster && !disablePaymaster) {
-      return await this.sendTransactionWithPaymaster(transactionData);
+      return await this.sendTransactionWithPaymaster(
+        transactionData,
+        sponsorSig,
+      );
     }
 
     return await this.sendTransactionWithoutPaymaster(transactionData);
@@ -275,6 +281,7 @@ class CyberAccount {
 
   public async sendTransactionWithPaymaster(
     transactionData: TransactionData,
+    sponsorSig?: string,
   ): Promise<Hash | undefined> {
     if (Array.isArray(transactionData)) {
       return await this.sendBatchTransactionWithPaymaster(transactionData);
@@ -306,8 +313,10 @@ class CyberAccount {
           ep: CyberBundler.entryPointAddress,
           operation: 0,
         },
-
-        { owner: this.owner.address },
+        {
+          owner: this.owner.address,
+          sponsorSig: sponsorSig || "",
+        },
         this.chain.id,
       );
 
@@ -385,6 +394,7 @@ class CyberAccount {
 
   public async sendBatchTransactionWithPaymaster(
     transactionData: TransactionData,
+    sponsorSig?: string,
   ): Promise<Hash | undefined> {
     if (!Array.isArray(transactionData)) {
       return;
@@ -431,7 +441,10 @@ class CyberAccount {
         ep,
         operation,
       },
-      { owner: this.owner.address },
+      {
+        owner: this.owner.address,
+        sponsorSig: sponsorSig || "",
+      },
       this.chain.id,
     );
 
@@ -465,10 +478,16 @@ class CyberAccount {
 
   public async estimateTransaction(
     transactionData: TransactionData,
-    { disablePaymaster = false }: { disablePaymaster?: boolean } = {},
+    {
+      disablePaymaster = false,
+      sponsorSig = "",
+    }: { disablePaymaster?: boolean; sponsorSig?: string } = {},
   ): Promise<EstimateUserOperationReturn | Estimation | undefined> {
     if (this.paymaster && !disablePaymaster) {
-      return await this.estimateTransactionWithPaymaster(transactionData);
+      return await this.estimateTransactionWithPaymaster(
+        transactionData,
+        sponsorSig,
+      );
     }
 
     return await this.estimateTransactionWithoutPaymaster(transactionData);
@@ -476,9 +495,13 @@ class CyberAccount {
 
   public async estimateTransactionWithPaymaster(
     transactionData: TransactionData,
+    sponsorSig?: string,
   ): Promise<EstimateUserOperationReturn | undefined> {
     if (Array.isArray(transactionData)) {
-      return await this.estimateBatchTransactionWithPaymaster(transactionData);
+      return await this.estimateBatchTransactionWithPaymaster(
+        transactionData,
+        sponsorSig,
+      );
     }
 
     const nonce = null;
@@ -498,7 +521,7 @@ class CyberAccount {
         ep: CyberBundler.entryPointAddress,
         operation: 0,
       },
-      { owner: this.owner.address },
+      { owner: this.owner.address, sponsorSig },
       this.chain.id,
     );
 
@@ -507,6 +530,7 @@ class CyberAccount {
 
   public async estimateBatchTransactionWithPaymaster(
     transactionData: TransactionData,
+    sponsorSig?: string,
   ): Promise<EstimateUserOperationReturn | undefined> {
     if (!Array.isArray(transactionData)) {
       return;
@@ -528,7 +552,10 @@ class CyberAccount {
         ep: CyberBundler.entryPointAddress,
         operation: 1,
       },
-      { owner: this.owner.address },
+      {
+        owner: this.owner.address,
+        sponsorSig: sponsorSig || "",
+      },
       this.chain.id,
     );
 
