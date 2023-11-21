@@ -478,10 +478,16 @@ class CyberAccount {
 
   public async estimateTransaction(
     transactionData: TransactionData,
-    { disablePaymaster = false }: { disablePaymaster?: boolean } = {},
+    {
+      disablePaymaster = false,
+      sponsorSig = "",
+    }: { disablePaymaster?: boolean; sponsorSig?: string } = {},
   ): Promise<EstimateUserOperationReturn | Estimation | undefined> {
     if (this.paymaster && !disablePaymaster) {
-      return await this.estimateTransactionWithPaymaster(transactionData);
+      return await this.estimateTransactionWithPaymaster(
+        transactionData,
+        sponsorSig,
+      );
     }
 
     return await this.estimateTransactionWithoutPaymaster(transactionData);
