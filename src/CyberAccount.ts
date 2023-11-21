@@ -521,7 +521,7 @@ class CyberAccount {
         ep: CyberBundler.entryPointAddress,
         operation: 0,
       },
-      { owner: this.owner.address },
+      { owner: this.owner.address, sponsorSig },
       this.chain.id,
     );
 
