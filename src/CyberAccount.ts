@@ -284,7 +284,10 @@ class CyberAccount {
     sponsorSig?: string,
   ): Promise<Hash | undefined> {
     if (Array.isArray(transactionData)) {
-      return await this.sendBatchTransactionWithPaymaster(transactionData);
+      return await this.sendBatchTransactionWithPaymaster(
+        transactionData,
+        sponsorSig,
+      );
     }
 
     const nonce = null;
@@ -421,7 +424,7 @@ class CyberAccount {
         ep,
         operation,
       },
-      { owner: this.owner.address },
+      { owner: this.owner.address, sponsorSig: sponsorSig || "" },
       this.chain.id,
     );
 
