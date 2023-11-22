@@ -337,7 +337,7 @@ class CyberAccount {
         ep: CyberBundler.entryPointAddress,
         operation: 0,
       },
-      { owner: this.owner.address },
+      { owner: this.owner.address, sponsorSig: sponsorSig || "" },
       this.chain.id,
     );
 
