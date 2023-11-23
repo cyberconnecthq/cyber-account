@@ -147,13 +147,14 @@ class CyberAccount {
       args: [this.encodeMultiSendCallData(batch)],
     });
 
-    return this.encodeExecuteCallData(
-      {
-        to: CyberAccount.MULTI_SEND_ADDRESS,
-        data: multiSendCallData,
-      },
-      1,
-    );
+    return multiSendCallData;
+    // return this.encodeExecuteCallData(
+    //   {
+    //     to: CyberAccount.MULTI_SEND_ADDRESS,
+    //     data: multiSendCallData,
+    //   },
+    //   1,
+    // );
   }
 
   private encodeMultiSendCallData(batch: UserOperationCallData[]) {
