@@ -147,14 +147,13 @@ class CyberAccount {
       args: [this.encodeMultiSendCallData(batch)],
     });
 
-    return multiSendCallData;
-    // return this.encodeExecuteCallData(
-    //   {
-    //     to: CyberAccount.MULTI_SEND_ADDRESS,
-    //     data: multiSendCallData,
-    //   },
-    //   1,
-    // );
+    return this.encodeExecuteCallData(
+      {
+        to: CyberAccount.MULTI_SEND_ADDRESS,
+        data: multiSendCallData,
+      },
+      1,
+    );
   }
 
   private encodeMultiSendCallData(batch: UserOperationCallData[]) {
@@ -544,7 +543,7 @@ class CyberAccount {
     const sender = this.address;
     const to = CyberAccount.MULTI_SEND_ADDRESS;
     const value = this.sumBatchTxValues(transactionData).toString();
-    const callData = this.encodeBatchExecuteCallData(transactionData);
+    const callData = this.encodeMultiSendFunctionData(transactionData);
 
     const estimation = await this.paymaster?.estimateUserOperation(
       {
