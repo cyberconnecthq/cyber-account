@@ -77,6 +77,7 @@ const testnetChains = [
   opBnbTestnet,
   scrollSepolia,
   goerli,
+  bscTestnet,
 ];
 const mainnetChains = [
   optimism,
@@ -87,6 +88,7 @@ const mainnetChains = [
   opBnbMainnet,
   mainnet,
   scroll,
+  bsc,
 ];
 
 const supportedChains: Chain[] = [...testnetChains, ...mainnetChains];
