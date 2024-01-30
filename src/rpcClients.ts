@@ -16,6 +16,7 @@ import {
   scroll,
   mainnet,
   goerli,
+  optimismSepolia,
 } from "viem/chains";
 
 export const opBnbMainnet = {
@@ -78,6 +79,7 @@ const testnetChains = [
   scrollSepolia,
   goerli,
   bscTestnet,
+  optimismSepolia,
 ];
 const mainnetChains = [
   optimism,
