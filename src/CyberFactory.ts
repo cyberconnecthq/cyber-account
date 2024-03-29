@@ -11,7 +11,7 @@ import {
   parseAbiParameters,
   encodeFunctionData,
 } from "viem";
-import { KernelFactoryAbi } from "./ABIs";
+import { KernelFactoryAbi } from "./ABIs/index.js";
 
 class CyberFactory {
   public ownerAddress: Address;

@@ -15,11 +15,13 @@ import {
   toBytes,
   fromBytes,
   encodePacked,
+  http,
+  Abi,
 } from "viem";
-import CyberFactory from "./CyberFactory";
-import CyberBundler from "./CyberBundler";
-import CyberPaymaster from "./CyberPaymaster";
-import { publicClients } from "./rpcClients";
+import CyberFactory from "./CyberFactory.js";
+import CyberBundler from "./CyberBundler.js";
+import CyberPaymaster from "./CyberPaymaster.js";
+import { publicClients } from "./rpcClients.js";
 import {
   type UserOperation,
   type UserOperationCallData,
@@ -28,8 +30,22 @@ import {
   type EstimateUserOperationReturn,
   type UserOperationCallDataWithDelegate,
   Estimation,
-} from "./types";
-import { EntryPointAbi, KernelAccountAbi, MultiSendAbi } from "./ABIs";
+} from "./types.js";
+import { EntryPointAbi, KernelAccountAbi, MultiSendAbi } from "./ABIs/index.js";
+import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
+import { signerToEcdsaValidator } from "@zerodev/ecdsa-validator";
+import {
+  signerToSessionKeyValidator,
+  SessionKeyData,
+  deserializeSessionKeyAccountV2 as zeroDevDeserializeSessionKeyAccount,
+  serializeSessionKeyAccount as zeroDevSerializeSessionKeyAccount,
+} from "@zerodev/session-key";
+import {
+  createKernelV2Account,
+  createKernelAccountClient,
+  type KernelSmartAccount,
+} from "@zerodev/sdk";
+import { SmartAccountSigner } from "permissionless/accounts";
 
 interface CyberAccountParams {
   owner: CyberAccountOwner;
@@ -48,6 +64,8 @@ class CyberAccount {
   public isDeployed?: boolean;
   private initCode?: Hex;
   public paymaster?: CyberPaymaster;
+  public sessionKeyAccount?: any;
+  public sessionKeyPrivateKey?: Hex;
 
   static MULTI_SEND_ADDRESS: Hex = "0x8ae01fCF7c655655fF2c6Ef907b8B4718Ab4e17c";
 
@@ -374,11 +392,11 @@ class CyberAccount {
 
   private sumBatchTxValues(transactionData: TransactionData) {
     if (!Array.isArray(transactionData)) {
-      return transactionData.value || 0n;
+      return transactionData.value || BigInt(0);
     }
 
     return transactionData.reduce(
-      (acc, tx) => acc + (tx.value || 0n),
+      (acc, tx) => acc + (tx.value || BigInt(0)),
       BigInt(0),
     );
   }
@@ -600,11 +618,11 @@ class CyberAccount {
     );
 
     const maxPriorityFeePerGasWithBuffer =
-      (maxPriorityFeePerGasOnChain * 125n) / 100n;
+      (maxPriorityFeePerGasOnChain * BigInt(125)) / BigInt(100);
 
     const { baseFeePerGas } = await this.publicClient.getBlock();
 
-    const baseFeePerGasWithBuffer = (baseFeePerGas || 0n) * 2n;
+    const baseFeePerGasWithBuffer = (baseFeePerGas || BigInt(0)) * BigInt(2);
 
     const maxFeePerGasWithBuffer =
       baseFeePerGasWithBuffer + maxPriorityFeePerGasWithBuffer;
@@ -682,6 +700,89 @@ class CyberAccount {
 
   private addValidatorToSignature(signature: Hex) {
     return concat([CyberFactory.validationModes.sudo, signature]);
+  }
+
+  public async generateSessionKeyAccount({
+    signer,
+    validatorData,
+  }: {
+    signer: SmartAccountSigner;
+    validatorData: SessionKeyData<Abi>;
+  }) {
+    const sessionPrivateKey = generatePrivateKey();
+    const sessionKeySigner = privateKeyToAccount(sessionPrivateKey);
+
+    this.sessionKeyPrivateKey = sessionPrivateKey;
+
+    const ecdsaValidator = await signerToEcdsaValidator(this.publicClient, {
+      signer,
+      validatorAddress: "0x417f5a41305ddc99d18b5e176521b468b2a31b86",
+    });
+
+    const sessionKeyValidator = await signerToSessionKeyValidator(
+      this.publicClient,
+      {
+        signer: sessionKeySigner,
+        validatorData,
+      },
+    );
+
+    const sessionKeyAccount = await createKernelV2Account(this.publicClient, {
+      plugins: {
+        sudo: ecdsaValidator,
+        regular: sessionKeyValidator,
+      },
+    });
+
+    const kernelClient = createKernelAccountClient({
+      account: sessionKeyAccount,
+      chain: this.chain,
+      transport: http(this.bundler.rpcUrl),
+      // sponsorUserOperation: paymasterClient?.sponsorUserOperation
+      //   ? async ({ userOperation }) =>
+      //       await paymasterClient.sponsorUserOperation({ userOperation })
+      //   : undefined,
+    });
+
+    this.sessionKeyAccount = {
+      ...sessionKeyAccount,
+      ...kernelClient,
+    };
+
+    return this.sessionKeyAccount;
+  }
+
+  public async serializeSessionKeyAccount(account: KernelSmartAccount) {
+    return zeroDevSerializeSessionKeyAccount(
+      account,
+      this.sessionKeyPrivateKey,
+    );
+  }
+
+  public async deserializeSessionKeyAccount(serializedAccount: string) {
+    const sessionKeyAccount = await zeroDevDeserializeSessionKeyAccount(
+      this.publicClient,
+      serializedAccount,
+    );
+
+    const kernelClient = createKernelAccountClient({
+      account: sessionKeyAccount,
+      chain: this.chain,
+      transport: http(
+        `${this.bundler.rpcUrl}?chainId=${this.chain.id}&appId=${this.bundler.appId}`,
+      ),
+      // sponsorUserOperation: paymasterClient?.sponsorUserOperation
+      //   ? async ({ userOperation }) =>
+      //       await paymasterClient.sponsorUserOperation({ userOperation })
+      //   : undefined,
+    });
+
+    this.sessionKeyAccount = {
+      ...sessionKeyAccount,
+      ...kernelClient,
+    };
+
+    return this.sessionKeyAccount;
   }
 }
 

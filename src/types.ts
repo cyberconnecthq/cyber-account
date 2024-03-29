@@ -10,8 +10,9 @@ import type {
   Log,
   Transport,
   WriteContractParameters,
+  SimulateContractReturnType,
 } from "viem";
-import { TokenReceiverAbi } from "./ABIs";
+import { TokenReceiverAbi } from "./ABIs/index.js";
 
 export type UserOperation = {
   sender: Address;
@@ -254,6 +255,6 @@ export type OnChainUserOperation = {
   transactionHash: Hash;
 };
 
-export type TopUpContractRequest = WriteContractParameters<
+export type TopUpContractRequest = SimulateContractReturnType<
   typeof TokenReceiverAbi
 >;

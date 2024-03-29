@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "nodenext",
+    "declaration": true,
+    "outDir": "./dist",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "checkJs": true,
+    "allowJs": true,
+    "declarationMap": true,
+    "allowSyntheticDefaultImports": true,
+    "moduleResolution": "nodenext"
+  },
+  "include": ["./**/*.ts"]
+}

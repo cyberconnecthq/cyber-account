@@ -1,6 +1,6 @@
 import { http, createClient, type Hash, type Address, type Chain } from "viem";
 import { mainnet } from "viem/chains";
-import type { BundlerClient, UserOperation } from "./types";
+import type { BundlerClient, UserOperation } from "./types.js";
 
 class CyberBundler {
   private clients: Record<number, BundlerClient>;

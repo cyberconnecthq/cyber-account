@@ -1,5 +1,5 @@
-export { KernelAccountAbi } from "./KernelAccountAbi";
-export { KernelFactoryAbi } from "./KernelFactoryAbi";
-export { EntryPointAbi } from "./EntryPointAbi";
-export { TokenReceiverAbi } from "./TokenReceiverAbi";
-export { MultiSendAbi } from "./MultiSendAbi";
+export { KernelAccountAbi } from "./KernelAccountAbi.js";
+export { KernelFactoryAbi } from "./KernelFactoryAbi.js";
+export { EntryPointAbi } from "./EntryPointAbi.js";
+export { TokenReceiverAbi } from "./TokenReceiverAbi.js";
+export { MultiSendAbi } from "./MultiSendAbi.js";

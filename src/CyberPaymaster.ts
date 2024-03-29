@@ -17,10 +17,10 @@ import type {
   EstimatedPaymasterData,
   SponsoredPaymasterData,
   TopUpContractRequest,
-} from "./types";
-import { TokenReceiverAbi } from "./ABIs";
-import CyberAccount from "./CyberAccount";
-import { supportedChains } from "./rpcClients";
+} from "./types.js";
+import { TokenReceiverAbi } from "./ABIs/index.js";
+import CyberAccount from "./CyberAccount.js";
+import { supportedChains } from "./rpcClients.js";
 
 type Params = {
   appId: string;
@@ -234,9 +234,10 @@ class CyberPaymaster {
     });
 
     if (writeContract) {
-      return await writeContract(request);
+      return await writeContract(request as unknown as TopUpContractRequest);
     }
 
+    //@ts-ignore
     return await walletClient.writeContract(request);
   }
 }
