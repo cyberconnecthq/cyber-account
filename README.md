@@ -14,6 +14,9 @@ CyberAccount SDK is the official NPM package that implements CyberConnect V3 acc
 - Linea / Linea Testnet
 - Arbitrum / Arbitrum Sepolia
 - opBNB / opBNB Testnet
+- BSC / BSC Testnet
+- Mantle / Mantle Testnet
+- Scroll / Scroll Sepolia
 
 ## Installation
 
