@@ -1,7 +1,6 @@
 import { Chain, createPublicClient, http, type PublicClient } from "viem";
 import {
   arbitrum,
-  arbitrumGoerli,
   base,
   bsc,
   bscTestnet,
@@ -9,90 +8,60 @@ import {
   lineaTestnet,
   optimism,
   polygon,
-  polygonMumbai,
   scrollSepolia,
   scroll,
   mainnet,
-  goerli,
   optimismSepolia,
   mantle,
-  mantaTestnet,
+  mantleTestnet,
   baseSepolia,
+  arbitrumSepolia,
+  opBNB,
+  opBNBTestnet,
 } from "viem/chains";
 
-export const opBnbMainnet = {
-  id: 204,
-  name: "opBNB",
-  network: "opBNB",
+export const polygonAmoy = {
+  id: 80002,
+  name: "Polygon Amoy",
+  network: "Polygon Amoy",
+  nativeCurrency: { name: "MATIC", symbol: "MATIC", decimals: 18 },
   rpcUrls: {
     public: {
-      http: [
-        "https://opbnb-mainnet.nodereal.io/v1/64a9df0874fb4a93b9d0a3849de012d3",
-      ],
+      http: ["https://rpc-amoy.polygon.technology/"],
     },
     default: {
-      http: [
-        `https://opbnb-mainnet.nodereal.io/v1/64a9df0874fb4a93b9d0a3849de012d3`,
-      ],
+      http: ["https://rpc-amoy.polygon.technology"],
     },
   },
   blockExplorers: {
-    default: {
-      name: "BlockScout",
-      url: "https://opbnbscan.com",
-    },
+    default: { name: "Explorer", url: "https://www.oklink.com/amoy" },
   },
-  nativeCurrency: bsc.nativeCurrency,
-};
-
-export const opBnbTestnet = {
-  id: 5611,
-  name: "opBNB Testnet",
-  network: "opBNB testnet",
-  rpcUrls: {
-    public: {
-      http: [
-        "https://opbnb-testnet.nodereal.io/v1/64a9df0874fb4a93b9d0a3849de012d3",
-      ],
-    },
-    default: {
-      http: [
-        `https://opbnb-testnet.nodereal.io/v1/64a9df0874fb4a93b9d0a3849de012d3`,
-      ],
-    },
-  },
-  blockExplorers: {
-    default: {
-      name: "BlockScout",
-      url: "https://testnet.opbnbscan.com",
-    },
-  },
-  nativeCurrency: bscTestnet.nativeCurrency,
+  testnet: true,
 };
 
 const testnetChains = [
   optimismSepolia,
-  polygonMumbai,
   lineaTestnet,
-  arbitrumGoerli,
-  opBnbTestnet,
+  arbitrumSepolia,
+  opBNBTestnet,
   scrollSepolia,
-  goerli,
   bscTestnet,
-  mantle,
   baseSepolia,
+  polygonAmoy,
+  mantleTestnet,
 ];
+
 const mainnetChains = [
   optimism,
   polygon,
   base,
   linea,
   arbitrum,
-  opBnbMainnet,
+  opBNB,
   mainnet,
   scroll,
   bsc,
-  mantaTestnet,
+  mantle,
 ];
 
 const supportedChains: Chain[] = [...testnetChains, ...mainnetChains];

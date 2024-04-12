@@ -182,14 +182,25 @@ class CyberAccount {
       sponsorSig = "",
     }: { disablePaymaster?: boolean; sponsorSig?: string } = {},
   ): Promise<Hash | undefined> {
+    let txHash: Hash | undefined;
+    let uoHash: Hash | undefined;
+
     if (this.paymaster && !disablePaymaster) {
-      return await this.sendTransactionWithPaymaster(
+      uoHash = await this.sendTransactionWithPaymaster(
         transactionData,
         sponsorSig,
       );
+    } else {
+      uoHash = await this.sendTransactionWithoutPaymaster(transactionData);
     }
 
-    return await this.sendTransactionWithoutPaymaster(transactionData);
+    while (!txHash && uoHash) {
+      txHash = await this.bundler
+        .getUserOperationReceipt(uoHash, this.chain.id)
+        .then((res) => res?.receipt.transactionHash);
+    }
+
+    return txHash;
   }
 
   private async getDraftedUserOperation(
