@@ -8,12 +8,12 @@ CyberAccount SDK is the official NPM package that implements CyberConnect V3 acc
 
 ## Supported Chains
 
-- Optimism / Optimism Goerli
-- Polygon / Polygon Mumbai
-- Base / Base Goerli
-- Linea / Linea Goerli
-- Arbitrum / Arbitrum Goerli
-- opBNB / opBNB Goerli
+- Optimism / Optimism Sepolia
+- Polygon / Polygon Amoy
+- Base / Base Sepolia
+- Linea / Linea Testnet
+- Arbitrum / Arbitrum Sepolia
+- opBNB / opBNB Testnet
 
 ## Installation
 
@@ -30,7 +30,7 @@ const cyberBundler = new CyberBundler({
 });
 
 const walletClient = createWalletClient({
-  chain: optimismGoerli,
+  chain: optimismSepolia,
   transport: custom(window.ethereum),
 });
 
@@ -152,7 +152,7 @@ By default, both Ethers and Viem will convert a message string to UTF-8 bytes wh
 
 ```typescript
 const walletClient = createWalletClient({
-  chain: optimismGoerli,
+  chain: optimismSepolia,
   transport: custom(window.ethereum),
 });
 
