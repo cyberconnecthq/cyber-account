@@ -20,6 +20,40 @@ import {
   opBNBTestnet,
 } from "viem/chains";
 
+export const cyber = {
+  id: 7560,
+  name: "Cyber",
+  network: "Cyber",
+  nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+  rpcUrls: {
+    default: { http: ["https://rpc.cyber.co"] },
+    public: { http: ["https://rpc.cyber.co"] },
+  },
+  blockExplorers: {
+    default: {
+      name: "Cyber Mainnet Explorer",
+      url: "https://cyberscan.co",
+    },
+  },
+};
+
+export const cyberTestnet = {
+  id: 111557560,
+  name: "Cyber Testnet",
+  network: "Cyber Testnet",
+  nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+  rpcUrls: {
+    default: { http: ["https://rpc.testnet.cyber.co"] },
+    public: { http: ["https://rpc.testnet.cyber.co"] },
+  },
+  blockExplorers: {
+    default: {
+      name: "Cyber Testnet Explorer",
+      url: "https://testnet.cyberscan.co/",
+    },
+  },
+};
+
 export const polygonAmoy = {
   id: 80002,
   name: "Polygon Amoy",
@@ -49,6 +83,7 @@ const testnetChains = [
   baseSepolia,
   polygonAmoy,
   mantleTestnet,
+  cyberTestnet,
 ];
 
 const mainnetChains = [
@@ -62,6 +97,7 @@ const mainnetChains = [
   scroll,
   bsc,
   mantle,
+  cyber,
 ];
 
 const supportedChains: Chain[] = [...testnetChains, ...mainnetChains];
