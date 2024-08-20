@@ -110,20 +110,15 @@ class CyberAccount {
     return res.data.wallet.owner?.address as Address | undefined;
   }
 
-  /**
-   *
-   * @returns false if owner is not changed, otherwise returns the new owner address
-   */
   public async checkOwnerChange() {
     const result = await CyberAccount.getOwner({
       address: this.address,
       chainId: this.chain.id,
     });
-    if (result === this.owner.address) {
-      return false;
-    } else {
-      return result;
-    }
+    return {
+      currentOwner: result || this.owner.address,
+      isChanged: result !== this.owner.address,
+    };
   }
 
   private getRpcClient(
