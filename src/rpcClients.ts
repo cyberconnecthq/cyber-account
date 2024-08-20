@@ -73,7 +73,7 @@ export const polygonAmoy = {
   testnet: true,
 };
 
-const testnetChains = [
+export const testnetChains: Chain[] = [
   optimismSepolia,
   lineaTestnet,
   arbitrumSepolia,
@@ -86,7 +86,7 @@ const testnetChains = [
   cyberTestnet,
 ];
 
-const mainnetChains = [
+export const mainnetChains: Chain[] = [
   optimism,
   polygon,
   base,

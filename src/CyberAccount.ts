@@ -19,7 +19,7 @@ import {
 import CyberFactory from "./CyberFactory";
 import CyberBundler from "./CyberBundler";
 import CyberPaymaster from "./CyberPaymaster";
-import { publicClients } from "./rpcClients";
+import { publicClients, testnetChains } from "./rpcClients";
 import {
   type UserOperation,
   type UserOperationCallData,
@@ -63,6 +63,43 @@ class CyberAccount {
     this.publicClient = this.getRpcClient(chain);
     this.bundler = bundler.connect(chain.id);
     this.paymaster = paymaster?.connect(this);
+  }
+
+  static async getOwner({
+    address,
+    chainId,
+  }: {
+    address: Address;
+    chainId: Chain["id"];
+  }) {
+    const rheaApiUrl = testnetChains.find((chain) => chain.id === chainId)
+      ? "https://api.stg.cyberconnect.dev/v3/"
+      : "https://api.cyberconnect.dev/v3/";
+
+    const options = {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query:
+          "query ($address: AddressEVM!, $chainId: ChainId!) {\n  wallet(address: $address, chainId: $chainId) {\n    id\n    address\n    chainId\n   ... on CyberAccount {\n deployed\n     owner {\n       address\n       chainId\n}\n   }\n  }\n}",
+        variables: {
+          address,
+          chainId,
+        },
+      }),
+    };
+
+    const res = await fetch(rheaApiUrl, options)
+      .then((response) => response.json())
+      .catch((err) => console.error(err));
+
+    console.log("get owner res", res);
+
+    if (!res.data.wallet.deployed) {
+      throw new Error("CyberAccount is not deployed.");
+    }
+
+    return res.data.wallet.owner.address as Address;
   }
 
   private getRpcClient(
