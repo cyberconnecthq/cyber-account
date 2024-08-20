@@ -110,7 +110,7 @@ class CyberAccount {
     return res.data.wallet.owner?.address as Address | undefined;
   }
 
-  public async checkOwnerChange() {
+  public async checkOwner() {
     const result = await CyberAccount.getOwner({
       address: this.address,
       chainId: this.chain.id,
