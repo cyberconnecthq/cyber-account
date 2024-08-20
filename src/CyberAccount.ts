@@ -103,8 +103,6 @@ class CyberAccount {
       .then((response) => response.json())
       .catch((err) => console.error(err));
 
-    console.log("get owner res", res);
-
     if (!res.data.wallet.deployed) {
       throw new CyberAccountNotDeployedError();
     }
