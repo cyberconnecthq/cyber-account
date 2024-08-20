@@ -30,12 +30,15 @@ import {
   Estimation,
 } from "./types";
 import { EntryPointAbi, KernelAccountAbi, MultiSendAbi } from "./ABIs";
+import { CyberAccountNotDeployedError } from "./error";
+import { getRheaApiUrlByChainId } from "./utils";
 
-interface CyberAccountParams {
+export interface CyberAccountParams {
   owner: CyberAccountOwner;
   chain: Partial<Chain> & { id: Chain["id"]; rpcUrl?: string };
   bundler: CyberBundler;
   paymaster?: CyberPaymaster;
+  address?: Address;
 }
 
 class CyberAccount {
@@ -59,12 +62,21 @@ class CyberAccount {
       ownerAddress: this.owner.address,
       chain,
     });
-    this.address = this.factory.calculateContractAccountAddress();
+    if (params.address) {
+      this.address = params.address;
+    } else {
+      this.address = this.factory.calculateContractAccountAddress();
+    }
     this.publicClient = this.getRpcClient(chain);
     this.bundler = bundler.connect(chain.id);
     this.paymaster = paymaster?.connect(this);
   }
 
+  /**
+   *
+   * @returns owner address or "none" if owner when owner is changed but couldn't get the new owner from backend (it has been fixed in BE)
+   * @throws CyberAccountNotDeployedError when the account is not deployed
+   */
   static async getOwner({
     address,
     chainId,
@@ -72,9 +84,7 @@ class CyberAccount {
     address: Address;
     chainId: Chain["id"];
   }) {
-    const rheaApiUrl = testnetChains.find((chain) => chain.id === chainId)
-      ? "https://api.stg.cyberconnect.dev/v3/"
-      : "https://api.cyberconnect.dev/v3/";
+    const rheaApiUrl = getRheaApiUrlByChainId(chainId);
 
     const options = {
       method: "POST",
@@ -96,10 +106,28 @@ class CyberAccount {
     console.log("get owner res", res);
 
     if (!res.data.wallet.deployed) {
-      throw new Error("CyberAccount is not deployed.");
+      throw new CyberAccountNotDeployedError();
     }
 
-    return res.data.wallet.owner.address as Address;
+    // "none" is a fixed corner case, where the owner is changed but didn't set a new owner in backend DB, it has been fixed in backend
+    return (res.data.wallet.owner?.address as Address | undefined) || "none";
+  }
+
+  /**
+   *
+   * @returns false if owner is not changed, otherwise returns the new owner address,
+   * or "none" if owner is changed but couldn't get the new owner from backend (it has been fixed in BE)
+   */
+  public async checkOwnerChange() {
+    const result = await CyberAccount.getOwner({
+      address: this.address,
+      chainId: this.chain.id,
+    });
+    if (result === this.owner.address) {
+      return false;
+    } else {
+      return result;
+    }
   }
 
   private getRpcClient(
