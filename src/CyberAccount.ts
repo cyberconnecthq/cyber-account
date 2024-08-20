@@ -74,7 +74,7 @@ class CyberAccount {
 
   /**
    *
-   * @returns owner address or "none" if owner when owner is changed but couldn't get the new owner from backend (it has been fixed in BE)
+   * @returns owner address
    * @throws CyberAccountNotDeployedError when the account is not deployed
    */
   static async getOwner({
@@ -107,14 +107,12 @@ class CyberAccount {
       throw new CyberAccountNotDeployedError();
     }
 
-    // "none" is a fixed corner case, where the owner is changed but didn't set a new owner in backend DB, it has been fixed in backend
-    return (res.data.wallet.owner?.address as Address | undefined) || "none";
+    return res.data.wallet.owner?.address as Address | undefined;
   }
 
   /**
    *
-   * @returns false if owner is not changed, otherwise returns the new owner address,
-   * or "none" if owner is changed but couldn't get the new owner from backend (it has been fixed in BE)
+   * @returns false if owner is not changed, otherwise returns the new owner address
    */
   public async checkOwnerChange() {
     const result = await CyberAccount.getOwner({
