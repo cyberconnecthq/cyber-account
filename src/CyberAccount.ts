@@ -116,7 +116,7 @@ class CyberAccount {
       chainId: this.chain.id,
     });
     return {
-      currentOwner: result || this.owner.address,
+      currentOwner: result,
       isChanged: result !== this.owner.address,
     };
   }
