@@ -19,7 +19,7 @@ import {
 import CyberFactory from "./CyberFactory";
 import CyberBundler from "./CyberBundler";
 import CyberPaymaster from "./CyberPaymaster";
-import { publicClients } from "./rpcClients";
+import { publicClients, testnetChains } from "./rpcClients";
 import {
   type UserOperation,
   type UserOperationCallData,
@@ -30,12 +30,15 @@ import {
   Estimation,
 } from "./types";
 import { EntryPointAbi, KernelAccountAbi, MultiSendAbi } from "./ABIs";
+import { CyberAccountNotDeployedError } from "./error";
+import { getRheaApiUrlByChainId } from "./utils";
 
-interface CyberAccountParams {
+export interface CyberAccountParams {
   owner: CyberAccountOwner;
   chain: Partial<Chain> & { id: Chain["id"]; rpcUrl?: string };
   bundler: CyberBundler;
   paymaster?: CyberPaymaster;
+  address?: Address;
 }
 
 class CyberAccount {
@@ -59,10 +62,63 @@ class CyberAccount {
       ownerAddress: this.owner.address,
       chain,
     });
-    this.address = this.factory.calculateContractAccountAddress();
+    if (params.address) {
+      this.address = params.address;
+    } else {
+      this.address = this.factory.calculateContractAccountAddress();
+    }
     this.publicClient = this.getRpcClient(chain);
     this.bundler = bundler.connect(chain.id);
     this.paymaster = paymaster?.connect(this);
+  }
+
+  /**
+   *
+   * @returns owner address if the account is deployed, otherwise undefined
+   * @throws CyberAccountNotDeployedError when the account is not deployed
+   */
+  static async getOwner({
+    address,
+    chainId,
+  }: {
+    address: Address;
+    chainId: Chain["id"];
+  }) {
+    const rheaApiUrl = getRheaApiUrlByChainId(chainId);
+
+    const options = {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query:
+          "query ($address: AddressEVM!, $chainId: ChainId!) {\n  wallet(address: $address, chainId: $chainId) {\n    id\n    address\n    chainId\n   ... on CyberAccount {\n deployed\n     owner {\n       address\n       chainId\n}\n   }\n  }\n}",
+        variables: {
+          address,
+          chainId,
+        },
+      }),
+    };
+
+    const res = await fetch(rheaApiUrl, options)
+      .then((response) => response.json())
+      .catch((err) => console.error(err));
+
+    if (!res.data.wallet.deployed) {
+      throw new CyberAccountNotDeployedError();
+    }
+
+    return res.data.wallet.owner?.address as Address | undefined;
+  }
+
+  public async checkOwner() {
+    const result = await CyberAccount.getOwner({
+      address: this.address,
+      chainId: this.chain.id,
+    });
+    return {
+      currentOwner: result,
+      isChanged: !!result && result !== this.owner.address,
+    };
   }
 
   private getRpcClient(
