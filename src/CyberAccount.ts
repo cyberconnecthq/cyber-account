@@ -74,7 +74,7 @@ class CyberAccount {
 
   /**
    *
-   * @returns owner address
+   * @returns owner address if the account is deployed, otherwise undefined
    * @throws CyberAccountNotDeployedError when the account is not deployed
    */
   static async getOwner({
@@ -117,7 +117,7 @@ class CyberAccount {
     });
     return {
       currentOwner: result,
-      isChanged: result !== this.owner.address,
+      isChanged: !!result && result !== this.owner.address,
     };
   }
 
